@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		953173E3E156E58C4837831F /* Pods_SwiftGeospatial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 974E21B37E9BEE3C5AE04ADA /* Pods_SwiftGeospatial.framework */; };
 		9FCB501D29325D3800BE3285 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FCB501C29325D3800BE3285 /* AppDelegate.m */; };
 		9FCB502029325D3800BE3285 /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FCB501F29325D3800BE3285 /* SceneDelegate.m */; };
 		9FCB502329325D3800BE3285 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FCB502229325D3800BE3285 /* ViewController.m */; };
@@ -17,6 +18,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		41836F4FEBDD1B5A4D56FE15 /* Pods-SwiftGeospatial.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwiftGeospatial.debug.xcconfig"; path = "Target Support Files/Pods-SwiftGeospatial/Pods-SwiftGeospatial.debug.xcconfig"; sourceTree = "<group>"; };
+		7E2E75266B32D3061598A9F4 /* Pods-SwiftGeospatial.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwiftGeospatial.release.xcconfig"; path = "Target Support Files/Pods-SwiftGeospatial/Pods-SwiftGeospatial.release.xcconfig"; sourceTree = "<group>"; };
+		974E21B37E9BEE3C5AE04ADA /* Pods_SwiftGeospatial.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SwiftGeospatial.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9FCB501829325D3800BE3285 /* SwiftGeospatial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftGeospatial.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9FCB501B29325D3800BE3285 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		9FCB501C29325D3800BE3285 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -36,17 +40,30 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				953173E3E156E58C4837831F /* Pods_SwiftGeospatial.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4BF00F2BFE297D304A6E2B7B /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				41836F4FEBDD1B5A4D56FE15 /* Pods-SwiftGeospatial.debug.xcconfig */,
+				7E2E75266B32D3061598A9F4 /* Pods-SwiftGeospatial.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		9FCB500F29325D3800BE3285 = {
 			isa = PBXGroup;
 			children = (
 				9FCB501A29325D3800BE3285 /* SwiftGeospatial */,
 				9FCB501929325D3800BE3285 /* Products */,
+				4BF00F2BFE297D304A6E2B7B /* Pods */,
+				B2D4668C3A26845FD82A651A /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -76,6 +93,14 @@
 			path = SwiftGeospatial;
 			sourceTree = "<group>";
 		};
+		B2D4668C3A26845FD82A651A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				974E21B37E9BEE3C5AE04ADA /* Pods_SwiftGeospatial.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -83,9 +108,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9FCB503129325D3900BE3285 /* Build configuration list for PBXNativeTarget "SwiftGeospatial" */;
 			buildPhases = (
+				E4E747A112F30231D6AABD83 /* [CP] Check Pods Manifest.lock */,
 				9FCB501429325D3800BE3285 /* Sources */,
 				9FCB501529325D3800BE3285 /* Frameworks */,
 				9FCB501629325D3800BE3285 /* Resources */,
+				7AB63B25005264A506BF0128 /* [CP] Embed Pods Frameworks */,
+				E09B4E8540A3A0995C713125 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -140,6 +168,65 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		7AB63B25005264A506BF0128 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-SwiftGeospatial/Pods-SwiftGeospatial-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-SwiftGeospatial/Pods-SwiftGeospatial-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SwiftGeospatial/Pods-SwiftGeospatial-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		E09B4E8540A3A0995C713125 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-SwiftGeospatial/Pods-SwiftGeospatial-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-SwiftGeospatial/Pods-SwiftGeospatial-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SwiftGeospatial/Pods-SwiftGeospatial-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		E4E747A112F30231D6AABD83 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-SwiftGeospatial-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		9FCB501429325D3800BE3285 /* Sources */ = {
@@ -287,6 +374,7 @@
 		};
 		9FCB503229325D3900BE3285 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 41836F4FEBDD1B5A4D56FE15 /* Pods-SwiftGeospatial.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -314,6 +402,7 @@
 		};
 		9FCB503329325D3900BE3285 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7E2E75266B32D3061598A9F4 /* Pods-SwiftGeospatial.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;

@@ -1,0 +1,4 @@
+${PODS_ROOT}/Target Support Files/ARCore/ARCore-xcframeworks.sh
+${PODS_ROOT}/ARCore/Base/Frameworks/ARCoreBase.xcframework
+${PODS_ROOT}/ARCore/GARSession/Frameworks/ARCoreGARSession.xcframework
+${PODS_ROOT}/ARCore/Geospatial/Frameworks/ARCoreGeospatial.xcframework

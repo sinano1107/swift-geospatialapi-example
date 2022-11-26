@@ -1,0 +1,19 @@
+framework module ARCoreGARSession {
+  umbrella header "ARCoreGARSession.h"
+  export *
+  module * { export * }
+  link "c++"
+  link "sqlite3"
+  link "z"
+  link framework "ARKit"
+  link framework "CoreGraphics"
+  link framework "CoreImage"
+  link framework "CoreMotion"
+  link framework "CoreTelephony"
+  link framework "CoreVideo"
+  link framework "Foundation"
+  link framework "ImageIO"
+  link framework "Security"
+  link framework "SystemConfiguration"
+  link framework "UIKit"
+}

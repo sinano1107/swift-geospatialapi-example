@@ -1,0 +1,3 @@
+${PODS_XCFRAMEWORKS_BUILD_DIR}/ARCore/Base/ARCoreBase.framework
+${PODS_XCFRAMEWORKS_BUILD_DIR}/ARCore/GARSession/ARCoreGARSession.framework
+${PODS_XCFRAMEWORKS_BUILD_DIR}/ARCore/Geospatial/ARCoreGeospatial.framework

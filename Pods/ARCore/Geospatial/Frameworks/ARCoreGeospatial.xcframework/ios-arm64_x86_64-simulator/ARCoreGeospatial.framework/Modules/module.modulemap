@@ -1,0 +1,25 @@
+framework module ARCoreGeospatial {
+  umbrella header "ARCoreGeospatial.h"
+  export *
+  module * { export * }
+  link "c++"
+  link "dl"
+  link "m"
+  link "sqlite3"
+  link "z"
+  link framework "ARKit"
+  link framework "AVFoundation"
+  link framework "CoreGraphics"
+  link framework "CoreImage"
+  link framework "CoreLocation"
+  link framework "CoreMedia"
+  link framework "CoreMotion"
+  link framework "CoreTelephony"
+  link framework "CoreVideo"
+  link framework "Foundation"
+  link framework "ImageIO"
+  link framework "SceneKit"
+  link framework "Security"
+  link framework "SystemConfiguration"
+  link framework "UIKit"
+}
