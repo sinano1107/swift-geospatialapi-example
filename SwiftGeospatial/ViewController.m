@@ -280,6 +280,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   [clearAllAnchorsButton.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
 }
 
+/*
 - (void)viewDidAppear:(BOOL)animated {
   [super viewDidAppear:animated];
 
@@ -873,17 +874,18 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
     self.islastClickedTerrainAnchorButton = self.isTerrainAnchorMode;
   }
 }
+ */
 
 #pragma mark - CLLocationManagerDelegate
 
 /** iOS < 14 用の認証コールバック。非推奨。ただし、デプロイメントターゲット >= 14.0 になるまでは必要。 */
-- (void)locationManager:(CLLocationManager *)locationManager
+/*- (void)locationManager:(CLLocationManager *)locationManager
     didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
   [self checkLocationPermission];
-}
+}*/
 
 /** iOS 14の認証コールバック。 */
-- (void)locationManagerDidChangeAuthorization:(CLLocationManager *)locationManager
+/*- (void)locationManagerDidChangeAuthorization:(CLLocationManager *)locationManager
     API_AVAILABLE(ios(14.0)) {
   [self checkLocationPermission];
 }
@@ -975,5 +977,6 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   [self updateWithGARFrame:garFrame];
 }
 
+ */
 
 @end
