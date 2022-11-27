@@ -20,60 +20,59 @@
 
 #import <ARCore/ARCore.h>
 
-// Thresholds for 'good enough' accuracy. These can be tuned for the application. We use both 'low'
-// and 'high' values here to avoid flickering state changes.
+// 「十分な」精度のための閾値。これらはアプリケーションに応じて調整することができます。
+// ここでは、状態の変化がちらつくのを避けるために、「低」と「高」の両方の値を使用します。
 static const CLLocationAccuracy kHorizontalAccuracyLowThreshold = 10;
 static const CLLocationAccuracy kHorizontalAccuracyHighThreshold = 20;
 static const CLLocationDirectionAccuracy kHeadingAccuracyLowThreshold = 15;
 static const CLLocationDirectionAccuracy kHeadingAccuracyHighThreshold = 25;
 
-// Time after which the app gives up if good enough accuracy is not achieved.
+// 十分な精度が得られない場合、アプリが諦めるまでの時間。
 static const NSTimeInterval kLocalizationFailureTime = 3 * 60.0;
-// Time after showing resolving terrain anchors no result yet message.
+// 地形アンカーを解決するメッセージが表示された後、時間が経過しました。
 static const NSTimeInterval kDurationNoTerrainAnchorResult = 10;
 
-// This sample allows up to 5 simultaneous anchors, although in principal ARCore supports an
-// unlimited number.
+// このサンプルでは最大5つのアンカーを同時に使用できますが、ARCoreは原則的に無制限にサポートします。
 static const NSUInteger kMaxAnchors = 5;
 
-static NSString *const kPretrackingMessage = @"Localizing your device to set anchor.";
+static NSString *const kPretrackingMessage = @"アンカーを設定するデバイスのローカライズ。";
 static NSString *const kLocalizationTip =
-    @"Point your camera at buildings, stores, and signs near you.";
-static NSString *const kLocalizationComplete = @"Localization complete.";
+    @"身近な建物やお店、看板などにカメラを向けてみましょう。";
+static NSString *const kLocalizationComplete = @"ローカライズ完了";
 static NSString *const kLocalizationFailureMessage =
-    @"Localization not possible.\nClose and open the app to restart.";
+    @"ローカライズができない。\n一度アプリを終了し、再度アプリを起動してください。";
 static NSString *const kGeospatialTransformFormat =
-    @"LAT/LONG: %.6f°, %.6f°\n    ACCURACY: %.2fm\nALTITUDE: %.2fm\n    ACCURACY: %.2fm\n"
-     "HEADING: %.1f°\n    ACCURACY: %.1f°";
+    @"LAT/LONG（緯度/経度）: %.6f°, %.6f°\n    ACCURACY（精度）: %.2fm\nALTITUDE（高度）: %.2fm\n    ACCURACY（精度）: %.2fm\n"
+     "HEADING（方位）: %.1f°\n    ACCURACY（精度）: %.1f°";
 
 static const CGFloat kFontSize = 14.0;
 
-// Anchor coordinates are persisted between sessions.
+// アンカー座標は、セッション間で永続化されます。
 static NSString *const kSavedAnchorsUserDefaultsKey = @"anchors";
 
-// Show privacy notice before using features.
+// 機能を使用する前にプライバシーポリシーを表示する。
 static NSString *const kPrivacyNoticeUserDefaultsKey = @"privacy_notice_acknowledged";
 
-// Title of the privacy notice prompt.
-static NSString *const kPrivacyNoticeTitle = @"AR in the real world";
+// プライバシー通知プロンプトのタイトル。
+static NSString *const kPrivacyNoticeTitle = @"現実世界におけるAR";
 
-// Content of the privacy notice prompt.
+// 個人情報保護に関する注意喚起の内容
 static NSString *const kPrivacyNoticeText =
-    @"To power this session, Google will process visual data from your camera.";
+    @"このセッションを動かすために、Googleはあなたのカメラからのビジュアルデータを処理します。";
 
-// Link to learn more about the privacy content.
+// プライバシーに関する内容を詳しく知るためのリンクです。
 static NSString *const kPrivacyNoticeLearnMoreURL =
     @"https://developers.google.com/ar/data-privacy";
 
-// Show VPS availability notice before using features.
+// 機能を使用する前に、VPSの可用性通知を表示します。
 static NSString *const kVPSAvailabilityNoticeUserDefaultsKey = @"VPS_availability_notice_acknowledged";
 
-// Title of the VPS availability notice prompt.
-static NSString *const kVPSAvailabilityTitle = @"VPS not available";
+// VPS可用性通知プロンプトのタイトル。
+static NSString *const kVPSAvailabilityTitle = @"VPSはご利用いただけません";
 
-// Content of the VPS availability notice prompt.
+// VPS可用性通知プロンプトの内容。
 static NSString *const kVPSAvailabilityText =
-    @"Your current location does not have VPS coverage. Your session will be using your GPS signal only if VPS is not available.";
+    @"現在地はVPSの通信エリアではありません。VPSが利用できない場合、セッションはGPS信号のみを使用します。";
 
 typedef NS_ENUM(NSInteger, LocalizationState) {
   LocalizationStatePretracking = 0,
@@ -84,69 +83,69 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
 
 @interface ViewController () <ARSessionDelegate, ARSCNViewDelegate, CLLocationManagerDelegate>
 
-/** Location manager used to request and check for location permissions. */
+/** 位置情報の許可要求と確認に使用される位置情報マネージャー。 */
 @property(nonatomic) CLLocationManager *locationManager;
 
 /** ARKit session. */
 @property(nonatomic) ARSession *arSession;
 
 /**
- * ARCore session, used for geospatial localization. Created after obtaining location permission.
+ * ARCoreセッション、地理空間ローカライズに使用。ロケーションパーミッションを取得後、作成される。
  */
 @property(nonatomic) GARSession *garSession;
 
-/** A view that shows an AR enabled camera feed and 3D content. */
+/** AR対応のカメラ映像や3Dコンテンツを表示するビューです。 */
 @property(nonatomic, weak) ARSCNView *scnView;
 
-/** SceneKit scene used for rendering markers. */
+/** マーカーをレンダリングするために使用される SceneKit のシーン。 */
 @property(nonatomic) SCNScene *scene;
 
-/** Label used to show Earth tracking state at top of screen. */
+/** 画面上部に地球追跡の状態を表示するためのラベル。 */
 @property(nonatomic, weak) UILabel *trackingLabel;
 
-/** Label used to show status at bottom of screen. */
+/** 画面下部のステータス表示に使用するラベル。 */
 @property(nonatomic, weak) UILabel *statusLabel;
 
-/** Label used to show hint that tap screen to create anchors. */
+/** 画面をタップしてアンカーを作成するヒントを表示するためのラベルです。 */
 @property(nonatomic, weak) UILabel *tapScreenLabel;
 
-/** Button used to place a new geospatial anchor. */
+/** 新しい地理空間アンカーを配置するために使用するボタンです。 */
 @property(nonatomic, weak) UIButton *addAnchorButton;
 
-/** UISwitch for creating WGS84 anchor or Terrain anchor. */
+/** WGS84アンカーまたはTerrainアンカーを作成するためのUISwitch。 */
 @property(nonatomic, weak) UISwitch *terrainAnchorSwitch;
 
-/** Label of terrainAnchorSwitch. */
+/** terrainAnchorSwitchのラベルです。 */
 @property(nonatomic, weak) UILabel *switchLabel;
 
-/** Button used to clear all existing anchors. */
+/** 既存のアンカーをすべてクリアするためのボタンです。 */
 @property(nonatomic, weak) UIButton *clearAllAnchorsButton;
 
-/** The most recent GARFrame. */
+/** 直近のGARFrame。 */
 @property(nonatomic) GARFrame *garFrame;
 
-/** Dictionary mapping anchor IDs to SceneKit nodes. */
+/** アンカー ID を SceneKit ノードにマッピングするディクショナリ。 */
 @property(nonatomic) NSMutableDictionary<NSUUID *, SCNNode *> *markerNodes;
 
-/** The last time we started attempting to localize. Used to implement failure timeout. */
+/** ローカライズの試行を開始した最後の時間。失敗時のタイムアウトを実装するために使用します。 */
 @property(nonatomic) NSDate *lastStartLocalizationDate;
 
-/** Dictionary mapping terrain anchor IDs to time we started resolving. */
+/** 地形アンカーIDを解決し始めた時間に対応させた辞書。 */
 @property(nonatomic) NSMutableDictionary<NSUUID *, NSDate *> *terrainAnchorIDToStartTime;
 
-/** Set of finished terrain anchor IDs to remove at next frame update. */
+/** 次のフレーム更新時に削除する終了した地形アンカーIDのセット。 */
 @property(nonatomic) NSMutableSet<NSUUID *> *anchorIDsToRemove;
 
-/** The current localization state. */
+/** 現在のローカライズの状態。 */
 @property(nonatomic) LocalizationState localizationState;
 
-/** Whether we have restored anchors saved from the previous session. */
+/** 前回から保存したアンカーを復元したかどうか。 */
 @property(nonatomic) BOOL restoredSavedAnchors;
 
-/** Whether the last anchor is terrain anchor. */
+/** 最後のアンカーが地形アンカーであるかどうか。 */
 @property(nonatomic) BOOL islastClickedTerrainAnchorButton;
 
-/** Whether it is Terrain anchor mode. */
+/** テレインアンカーモードであるかどうか。 */
 @property(nonatomic) BOOL isTerrainAnchorMode;
 
 @end
@@ -191,7 +190,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   tapScreenLabel.textColor = UIColor.whiteColor;
   tapScreenLabel.numberOfLines = 2;
   tapScreenLabel.textAlignment = NSTextAlignmentCenter;
-  tapScreenLabel.text = @"TAP ON SCREEN TO CREATE ANCHOR";
+  tapScreenLabel.text = @"画面をタップしてアンカーを作成";
   tapScreenLabel.hidden = YES;
   self.tapScreenLabel = tapScreenLabel;
   [self.scnView addSubview:tapScreenLabel];
@@ -207,7 +206,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
 
   UIButton *addAnchorButton = [UIButton buttonWithType:UIButtonTypeSystem];
   addAnchorButton.translatesAutoresizingMaskIntoConstraints = NO;
-  [addAnchorButton setTitle:@"ADD CAMERA ANCHOR" forState:UIControlStateNormal];
+  [addAnchorButton setTitle:@"カメラアンカーを追加する" forState:UIControlStateNormal];
   addAnchorButton.titleLabel.font = boldFont;
   [addAnchorButton addTarget:self
                       action:@selector(addAnchorButtonPressed)
@@ -228,11 +227,11 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   switchLabel.numberOfLines = 1;
   self.switchLabel = switchLabel;
   [self.scnView addSubview:switchLabel];
-  self.switchLabel.text = @"TERRAIN";
+  self.switchLabel.text = @"地形";
 
   UIButton *clearAllAnchorsButton = [UIButton buttonWithType:UIButtonTypeSystem];
   clearAllAnchorsButton.translatesAutoresizingMaskIntoConstraints = NO;
-  [clearAllAnchorsButton setTitle:@"CLEAR ALL ANCHORS" forState:UIControlStateNormal];
+  [clearAllAnchorsButton setTitle:@"すべてのアンカーをクリアする" forState:UIControlStateNormal];
   clearAllAnchorsButton.titleLabel.font = boldFont;
   [clearAllAnchorsButton addTarget:self
                             action:@selector(clearAllAnchorsButtonPressed)
@@ -296,7 +295,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
                                           message:kPrivacyNoticeText
                                    preferredStyle:UIAlertControllerStyleAlert];
   UIAlertAction *getStartedAction = [UIAlertAction
-      actionWithTitle:@"Get started"
+      actionWithTitle:@"スタート"
                 style:UIAlertActionStyleDefault
               handler:^(UIAlertAction *action) {
                 [[NSUserDefaults standardUserDefaults] setBool:YES
@@ -304,7 +303,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
                 [self setUpARSession];
               }];
   UIAlertAction *learnMoreAction = [UIAlertAction
-      actionWithTitle:@"Learn more"
+      actionWithTitle:@"詳細はこちら"
                 style:UIAlertActionStyleDefault
               handler:^(UIAlertAction *action) {
                 [[UIApplication sharedApplication]
@@ -323,7 +322,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
                                           message:kVPSAvailabilityText
                                    preferredStyle:UIAlertControllerStyleAlert];
   UIAlertAction *continueAction = [UIAlertAction
-      actionWithTitle:@"Continue"
+      actionWithTitle:@"継続"
                 style:UIAlertActionStyleDefault
               handler:^(UIAlertAction *action) {
               }];
@@ -334,16 +333,16 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
 - (void)setUpARSession {
   ARWorldTrackingConfiguration *configuration = [[ARWorldTrackingConfiguration alloc] init];
   configuration.worldAlignment = ARWorldAlignmentGravity;
-  // Optional. It will help the dynamic alignment of terrain anchors on ground.
+  // オプションです。地形アンカーを地面に設置する際の動的な位置合わせを支援します。
   configuration.planeDetection = ARPlaneDetectionHorizontal;
   self.arSession.delegate = self;
-  // Start AR session - this will prompt for camera permissions the first time.
+  // ARセッションを開始する - 初回はカメラの許可を求めるプロンプトが表示されます。
   [self.arSession runWithConfiguration:configuration];
 
   self.locationManager = [[CLLocationManager alloc] init];
-  // This will cause either |locationManager:didChangeAuthorizationStatus:| or
-  // |locationManagerDidChangeAuthorization:| (depending on iOS version) to be called asynchronously
-  // on the main thread. After obtaining location permission, we will set up the ARCore session.
+  // これにより、メインスレッドで非同期に |locationManager:didChangeAuthorizationStatus:| または
+  // |locationManagerDidChangeAuthorization:| (iOS バージョンによって異なる) が呼び出されます。
+  // ロケーションパーミッションを取得したら、ARCoreのセッションを設定します。
   self.locationManager.delegate = self;
 }
 
@@ -358,19 +357,19 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
       authorizationStatus == kCLAuthorizationStatusAuthorizedWhenInUse) {
     if (@available(iOS 14.0, *)) {
       if (self.locationManager.accuracyAuthorization != CLAccuracyAuthorizationFullAccuracy) {
-        [self setErrorStatus:@"Location permission not granted with full accuracy."];
+        [self setErrorStatus:@"位置情報は完全な精度で許可されたものではありません。"];
         return;
       }
     }
-    // Request device location for check VPS availability.
+    // VPSの可用性を確認するために、デバイスの位置をリクエストします。
     [self.locationManager requestLocation];
     [self setUpGARSession];
   } else if (authorizationStatus == kCLAuthorizationStatusNotDetermined) {
-    // The app is responsible for obtaining the location permission prior to configuring the ARCore
-    // session. ARCore will not cause the location permission system prompt.
+    // ARCoreのセッションを構成する前に、アプリが責任を持ってロケーションパーミッションを取得する必要があります。
+    // ARCoreはロケーションパーミッションのシステムプロンプトを発生させません。
     [self.locationManager requestWhenInUseAuthorization];
   } else {
-    [self setErrorStatus:@"Location permission denied or restricted."];
+    [self setErrorStatus:@"位置情報の取得が拒否または制限されている。"];
   }
 }
 
@@ -413,14 +412,14 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
                                             error:&error];
   if (error) {
     [self setErrorStatus:[NSString
-                             stringWithFormat:@"Failed to create GARSession: %d", (int)error.code]];
+                             stringWithFormat:@"GARSessionの作成に失敗しました: %d", (int)error.code]];
     return;
   }
 
   self.localizationState = LocalizationStateFailed;
 
   if (![self.garSession isGeospatialModeSupported:GARGeospatialModeEnabled]) {
-    [self setErrorStatus:@"GARGeospatialModeEnabled is not supported on this device."];
+    [self setErrorStatus:@"GARGeospatialModeEnabled は、このデバイスではサポートされていません。"];
     return;
   }
 
@@ -428,7 +427,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   configuration.geospatialMode = GARGeospatialModeEnabled;
   [self.garSession setConfiguration:configuration error:&error];
   if (error) {
-    [self setErrorStatus:[NSString stringWithFormat:@"Failed to configure GARSession: %d",
+    [self setErrorStatus:[NSString stringWithFormat:@"GARSessionの設定に失敗しました: %d",
                                                     (int)error.code]];
     return;
   }
@@ -482,7 +481,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
 }
 
 - (void)updateLocalizationState {
-  // This will be nil if not currently tracking.
+  // 現在トラッキングを行っていない場合はnilとなる。
   GARGeospatialTransform *geospatialTransform = self.garFrame.earth.cameraGeospatialTransform;
   NSDate *now = [NSDate date];
 
@@ -507,7 +506,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
         self.localizationState = LocalizationStateFailed;
       }
     } else {
-      // Use higher thresholds for exiting 'localized' state to avoid flickering state changes.
+      // ローカライズされた状態から抜け出す際に高いしきい値を使用することで、状態変化のちらつきを回避する。
       if (geospatialTransform == nil ||
           geospatialTransform.horizontalAccuracy > kHorizontalAccuracyHighThreshold ||
           geospatialTransform.headingAccuracy > kHeadingAccuracyHighThreshold) {
@@ -521,14 +520,14 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
 - (void)updateMarkerNodes {
   NSMutableSet<NSUUID *> *currentAnchorIDs = [NSMutableSet set];
 
-  // Add/update nodes for tracking anchors.
+  // トラッキングアンカー用のノードを追加・更新しました。
   for (GARAnchor *anchor in self.garFrame.anchors) {
     if (anchor.trackingState != GARTrackingStateTracking) {
       continue;
     }
     SCNNode *node = self.markerNodes[anchor.identifier];
     if (!node) {
-      // Only render resolved Terrain Anchors and Geospatial anchors.
+      // 解決された地形アンカーと地理空間アンカーだけをレンダリングします。
       if (anchor.terrainState == GARTerrainAnchorStateSuccess) {
         node = [self markerNodeIsTerrainAnchor:YES];
       } else if (anchor.terrainState == GARTerrainAnchorStateNone) {
@@ -542,7 +541,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
     [currentAnchorIDs addObject:anchor.identifier];
   }
 
-  // Remove nodes for anchors that are no longer tracking.
+  // トラッキングが終了したアンカーのノードを削除します。
   for (NSUUID *anchorID in self.markerNodes.allKeys) {
     if (![currentAnchorIDs containsObject:anchorID]) {
       SCNNode *node = self.markerNodes[anchorID];
@@ -581,18 +580,16 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
     return;
   }
 
-  // This can't be nil if currently tracking and in a good EarthState.
+  // 現在トラッキング中で、かつ良好なEarthStateであれば、これはゼロにはなりえません。
   GARGeospatialTransform *geospatialTransform = self.garFrame.earth.cameraGeospatialTransform;
 
-  // Display heading in range [-180, 180], with 0=North, instead of [0, 360), as required by the
-  // type CLLocationDirection.
+  // CLLocationDirection 型で要求される [0, 360] の代わりに [-180, 180] (0=North) の範囲で方位を表示します。
   double heading = geospatialTransform.heading;
   if (heading > 180) {
     heading -= 360;
   }
 
-  // Note: the altitude value here is relative to the WGS84 ellipsoid (equivalent to
-  // |CLLocation.ellipsoidalAltitude|).
+  // 注意：ここでの高度値は、WGS84楕円体に対する相対値です（|CLLocation.ellipsoidalAltitude|に相当します）。
   self.trackingLabel.text = [NSString
       stringWithFormat:kGeospatialTransformFormat, geospatialTransform.coordinate.latitude,
                        geospatialTransform.coordinate.longitude,
@@ -607,7 +604,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
       [self.terrainAnchorIDToStartTime removeObjectsForKeys:[self.anchorIDsToRemove allObjects]];
       [self.anchorIDsToRemove removeAllObjects];
       NSString *message = nil;
-      // If there is a new terrain anchor state, show terrain anchor state.
+      // 新しい地形アンカー状態がある場合、地形アンカー状態を表示する。
       for (GARAnchor *anchor in self.garFrame.anchors) {
         if (anchor.terrainState == GARTerrainAnchorStateNone) {
           continue;
@@ -621,12 +618,12 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
           if (anchor.terrainState == GARTerrainAnchorStateTaskInProgress) {
             if ([now timeIntervalSinceDate:self.terrainAnchorIDToStartTime[anchor.identifier]] >=
                 kDurationNoTerrainAnchorResult) {
-              message = @"Still resolving the terrain anchor. Please make sure you\'re "
-                        @"in an area that has VPS coverage.";
+              message = @"地形アンカーはまだ解決していません。"
+                        @"VPSが使える地域であることをご確認ください。";
               [self.anchorIDsToRemove addObject:anchor.identifier];
             }
           } else {
-            // Remove it if task has finished.
+            // タスクが終了したら、削除してください。
             [self.anchorIDsToRemove addObject:anchor.identifier];
           }
         }
@@ -698,23 +695,22 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
                      shouldSave:(BOOL)shouldSave {
   simd_quatf eastUpSouthQAnchor;
   if (useHeading) {
-    // The arrow of the 3D model points towards the Z-axis, while heading is measured clockwise from
-    // North.
+    // 3Dモデルの矢印はZ軸を指し、ヘディングは北から時計回りに計測されます。
     float angle = (M_PI / 180) * (180 - heading);
     eastUpSouthQAnchor = simd_quaternion(angle, simd_make_float3(0, 1, 0));
   } else {
     eastUpSouthQAnchor = eastUpSouthQTarget;
   }
-  // The return value of |createAnchorWithCoordinate:altitude:eastUpSouthQAnchor:error:| is just the
-  // first snapshot of the anchor (which is immutable). Use the updated snapshots in
-  // |GARFrame.anchors| to get updated values on a frame-by-frame basis.
+  // |createAnchorWithCoordinate:altitude:eastUpSouthQAnchor:error:| の戻り値は、
+  // アンカーの最初のスナップショット（これは不変です）だけです。
+  // フレームごとに更新された値を取得するには、|GARFrame.anchors| で更新されたスナップショットを使用します。
   NSError *error = nil;
   [self.garSession createAnchorWithCoordinate:coordinate
                                      altitude:altitude
                            eastUpSouthQAnchor:eastUpSouthQAnchor
                                         error:&error];
   if (error) {
-    NSLog(@"Error adding anchor: %@", error);
+    NSLog(@"アンカー追加エラー: %@", error);
     return;
   }
 
@@ -753,27 +749,26 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
                             shouldSave:(BOOL)shouldSave {
   simd_quatf eastUpSouthQAnchor;
   if (useHeading) {
-    // The arrow of the 3D model points towards the Z-axis, while heading is measured clockwise from
-    // North.
+    // 3Dモデルの矢印はZ軸を指し、ヘディングは北から時計回りに計測されます。
     float angle = (M_PI / 180) * (180 - heading);
     eastUpSouthQAnchor = simd_quaternion(angle, simd_make_float3(0, 1, 0));
   } else {
     eastUpSouthQAnchor = eastUpSouthQTarget;
   }
 
-  // The return value of |createAnchorWithCoordinate:altitude:eastUpSouthQAnchor:error:| is just the
-  // first snapshot of the anchor (which is immutable). Use the updated snapshots in
-  // |GARFrame.anchors| to get updated values on a frame-by-frame basis.
+  // |createAnchorWithCoordinate:altitude:eastUpSouthQAnchor:error:| の戻り値は、
+  // アンカーの最初のスナップショット（これは不変です）だけです。
+  // フレームごとに更新された値を取得するには、|GARFrame.anchors| で更新されたスナップショットを使用します。
   NSError *error = nil;
   GARAnchor *anchor = [self.garSession createAnchorWithCoordinate:coordinate
                                              altitudeAboveTerrain:0
                                                eastUpSouthQAnchor:eastUpSouthQAnchor
                                                             error:&error];
   if (error) {
-    NSLog(@"Error adding anchor: %@", error);
+    NSLog(@"アンカー追加エラー: %@", error);
     if (error.code == GARSessionErrorCodeResourceExhausted) {
       self.statusLabel.text =
-          @"Too many terrain anchors have already been held. Clear all anchors to create new ones.";
+          @"地形アンカーが多すぎるので、すでに保持されている。すべてのアンカーをクリアして、新しいアンカーを作成してください。";
     }
     return;
   }
@@ -805,7 +800,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
 }
 
 - (void)addAnchorButtonPressed {
-  // This button will be hidden if not currently tracking, so this can't be nil.
+  // このボタンは、現在トラッキング中でなければ非表示になるので、nilにすることはできません。
   GARGeospatialTransform *geospatialTransform = self.garFrame.earth.cameraGeospatialTransform;
   if (self.isTerrainAnchorMode) {
     [self addTerrainAnchorWithCoordinate:geospatialTransform.coordinate
@@ -857,7 +852,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
     GARGeospatialTransform *geospatialTransform =
         [self.garSession geospatialTransformFromTransform:result.worldTransform error:&error];
     if (error) {
-      NSLog(@"Error adding convert transform to GARGeospatialTransform: %@", error);
+      NSLog(@"GARGeospatialTransform への変換トランスフォームの追加エラー: %@", error);
       return;
     }
 
@@ -881,13 +876,13 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
 
 #pragma mark - CLLocationManagerDelegate
 
-/** Authorization callback for iOS < 14. Deprecated, but needed until deployment target >= 14.0. */
+/** iOS < 14 用の認証コールバック。非推奨。ただし、デプロイメントターゲット >= 14.0 になるまでは必要。 */
 - (void)locationManager:(CLLocationManager *)locationManager
     didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
   [self checkLocationPermission];
 }
 
-/** Authorization callback for iOS 14. */
+/** iOS 14の認証コールバック。 */
 - (void)locationManagerDidChangeAuthorization:(CLLocationManager *)locationManager
     API_AVAILABLE(ios(14.0)) {
   [self checkLocationPermission];
@@ -902,7 +897,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
 }
 
 - (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error {
-   NSLog(@"Error get location: %@", error);
+   NSLog(@"位置取得エラー: %@", error);
 }
 
 #pragma mark - ARSCNViewDelegate
@@ -945,8 +940,8 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
 
     SCNNode *planeNode = node.childNodes.firstObject;
     NSAssert([planeNode.geometry isKindOfClass:[SCNPlane class]],
-             @"planeNode's child is not an SCNPlane--did something go wrong in "
-             @"renderer:didAddNode:forAnchor:?");
+             @"planeNodeの子はSCNPlaneではありません"
+             @"renderer:didAddNode:forAnchor:で何か問題があったのでしょうか？");
     SCNPlane *plane = (SCNPlane *)planeNode.geometry;
 
     CGFloat width = planeAnchor.extent.x;
