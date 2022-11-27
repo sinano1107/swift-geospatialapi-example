@@ -7,7 +7,8 @@
 
 #import "AppDelegate.h"
 
-#import "ViewController.h"
+//#import "ViewController.h"
+#import "SwiftGeospatial-Swift.h"
 
 @implementation AppDelegate
 
@@ -16,7 +17,8 @@
     [UIApplication sharedApplication].idleTimerDisabled = YES;
     self.window = [[UIWindow alloc] init];
     UIStoryboard *storyBoard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
-    ViewController *viewController = [storyBoard instantiateInitialViewController];
+//    ViewController *viewController = [storyBoard instantiateInitialViewController];
+    SwiftViewController *viewController = [storyBoard instantiateInitialViewController];
     self.window.rootViewController = viewController;
     [self.window makeKeyAndVisible];
     return YES;
