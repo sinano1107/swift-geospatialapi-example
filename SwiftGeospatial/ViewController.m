@@ -280,7 +280,6 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   [clearAllAnchorsButton.leftAnchor constraintEqualToAnchor:self.view.leftAnchor].active = YES;
 }
 
-/*
 - (void)viewDidAppear:(BOOL)animated {
   [super viewDidAppear:animated];
 
@@ -316,6 +315,8 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   [alertController addAction:learnMoreAction];
   [self presentViewController:alertController animated:NO completion:nil];
 }
+ 
+ /*
 
 - (void)showVPSUnavailableNotice {
   UIAlertController *alertController =
@@ -330,6 +331,8 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   [alertController addAction:continueAction];
   [self presentViewController:alertController animated:NO completion:nil];
 }
+  
+*/
 
 - (void)setUpARSession {
   ARWorldTrackingConfiguration *configuration = [[ARWorldTrackingConfiguration alloc] init];
@@ -346,6 +349,8 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   // ロケーションパーミッションを取得したら、ARCoreのセッションを設定します。
   self.locationManager.delegate = self;
 }
+
+/*
 
 - (void)checkLocationPermission {
   CLAuthorizationStatus authorizationStatus;

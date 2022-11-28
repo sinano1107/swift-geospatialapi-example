@@ -10,7 +10,22 @@ import ARKit
 
 private let kFontSize = CGFloat(14.0)
 
-class SwiftViewController: UIViewController, ARSCNViewDelegate {
+// 機能を使用する前にプライバシーポリシーを表示する。
+private let kPrivacyNoticeUserDefaultsKey = "privacy_notice_acknowledged"
+
+// プライバシー通知プロンプトのタイトル。
+private let kPrivacyNoticeTitle = "現実世界におけるAR"
+
+// 個人情報保護に関する注意喚起の内容
+private let kPrivacyNoticeText = "このセッションを動かすために、Googleはあなたのカメラからのビジュアルデータを処理します。"
+
+// プライバシーに関する内容を詳しく知るためのリンクです。
+private let kPrivacyNoticeLearnMoreURL = "https://developers.google.com/ar/data-privacy"
+
+class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, CLLocationManagerDelegate {
+    /** 位置情報の許可要求と確認に使用される位置情報マネージャー。 */
+    private var locationManager: CLLocationManager?
+    
     /** ARKit session. */
     private var arSession: ARSession?
     
@@ -183,6 +198,46 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate {
         // clearAllAnchorButton
         clearAllAnchorsButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor).isActive = true
         clearAllAnchorsButton.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        let privacyNoticeAcknowledged = UserDefaults.standard.bool(forKey: kPrivacyNoticeUserDefaultsKey)
+        if privacyNoticeAcknowledged {
+            setUpARSession()
+            return
+        }
+        
+        let alertController = UIAlertController(title: kPrivacyNoticeTitle, message: kPrivacyNoticeText, preferredStyle: .alert)
+        let getStartedAction = UIAlertAction(title: "スタート", style: .default) { action in
+            UserDefaults.standard.set(true, forKey: kPrivacyNoticeUserDefaultsKey)
+            self.setUpARSession()
+        }
+        let learnMoreAction = UIAlertAction(title: "詳細はこちら", style: .default) { action in
+            if let url = URL(string: kPrivacyNoticeLearnMoreURL) {
+                UIApplication.shared.open(url)
+            }
+        }
+        alertController.addAction(getStartedAction)
+        alertController.addAction(learnMoreAction)
+        present(alertController, animated: false)
+    }
+    
+    func setUpARSession() {
+        let configuration = ARWorldTrackingConfiguration()
+        configuration.worldAlignment = .gravity
+        // オプションです。地形アンカーを地面に設置する際の動的な位置合わせを支援します。
+        configuration.planeDetection = .horizontal
+        arSession?.delegate = self
+        // ARセッションを開始する - 初回はカメラの許可を求めるプロンプトが表示されます。
+        arSession?.run(configuration)
+        
+        locationManager = CLLocationManager()
+        // これにより、メインスレッドで非同期に |locationManager:didChangeAuthorizationStatus:| または
+        // |locationManagerDidChangeAuthorization:| (iOS バージョンによって異なる) が呼び出されます。
+        // ロケーションパーミッションを取得したら、ARCoreのセッションを設定します。
+        locationManager?.delegate = self
     }
     
     @objc
