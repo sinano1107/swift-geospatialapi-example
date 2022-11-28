@@ -908,7 +908,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
 }
 
 #pragma mark - ARSCNViewDelegate
-/*- (nullable SCNNode *)renderer:(id<SCNSceneRenderer>)renderer nodeForAnchor:(ARAnchor *)anchor {
+- (nullable SCNNode *)renderer:(id<SCNSceneRenderer>)renderer nodeForAnchor:(ARAnchor *)anchor {
   return [[SCNNode alloc] init];
 }
 
@@ -973,7 +973,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
 }
 
 #pragma mark - ARSessionDelegate
-
+/*
 - (void)session:(ARSession *)session didUpdateFrame:(ARFrame *)frame {
   if (self.garSession == nil || self.localizationState == LocalizationStateFailed) {
     return;

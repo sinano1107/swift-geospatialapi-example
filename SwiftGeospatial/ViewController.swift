@@ -339,7 +339,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     }
     
     func checkVPSAvailability(withCoordinate coordinate: CLLocationCoordinate2D) {
-        garSession!.checkVPSAvailability(coordinate: coordinate) { availability in
+        garSession?.checkVPSAvailability(coordinate: coordinate) { availability in
             if availability != GARVPSAvailability.available {
                 self.showVPSUnavailableNotice()
             }
@@ -348,11 +348,13 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     
     @objc
     func addAnchorButtonPressed() {
+        // TODO: ここの翻訳
         print("アンカーを追加する")
     }
     
     @objc
     func clearAllAnchorsButtonPressed() {
+        // TODO: ここの翻訳
         print("アンカーを全てクリアする")
     }
     
@@ -377,5 +379,59 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("位置取得エラー: \(error)")
+    }
+    
+    // MARK: - ARSCNViewDelegate
+    func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
+        return SCNNode()
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+        if anchor is ARPlaneAnchor {
+            let planeAnchor = anchor as! ARPlaneAnchor
+            
+            let width = planeAnchor.planeExtent.width
+            let height = planeAnchor.planeExtent.height
+            let plane = SCNPlane(width: CGFloat(width), height: CGFloat(height))
+            
+            plane.materials.first?.diffuse.contents = UIColor(red: 0, green: 0, blue: 1, alpha: 0.7)
+            
+            let planeNode = SCNNode(geometry: plane)
+            
+            let x = planeAnchor.center.x
+            let y = planeAnchor.center.y
+            let z = planeAnchor.center.z
+            planeNode.position = SCNVector3Make(x, y, z)
+            planeNode.eulerAngles = SCNVector3Make(-.pi / 2, 0, 0)
+            
+            node.addChildNode(planeNode)
+        }
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+        if anchor is ARPlaneAnchor {
+            let planeAnchor = anchor as! ARPlaneAnchor
+            
+            let planeNode = node.childNodes.first!
+            assert(planeNode.geometry is SCNPlane, "planeNodeの子はSCNPlaneではありません。renderer:didAddNode:forAnchor:で何か問題があったのでしょうか？")
+            let plane = planeNode.geometry as! SCNPlane
+            
+            let width = planeAnchor.planeExtent.width
+            let height = planeAnchor.planeExtent.height
+            plane.width = CGFloat(width)
+            plane.height = CGFloat(height)
+            
+            let x = planeAnchor.center.x
+            let y = planeAnchor.center.y
+            let z = planeAnchor.center.z
+            planeNode.position = SCNVector3Make(x, y, z)
+        }
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, didRemove node: SCNNode, for anchor: ARAnchor) {
+        if anchor is ARPlaneAnchor {
+            let planeNode = node.childNodes.first!
+            planeNode.removeFromParentNode()
+        }
     }
 }
