@@ -315,8 +315,6 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   [alertController addAction:learnMoreAction];
   [self presentViewController:alertController animated:NO completion:nil];
 }
- 
- /*
 
 - (void)showVPSUnavailableNotice {
   UIAlertController *alertController =
@@ -331,8 +329,6 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   [alertController addAction:continueAction];
   [self presentViewController:alertController animated:NO completion:nil];
 }
-  
-*/
 
 - (void)setUpARSession {
   ARWorldTrackingConfiguration *configuration = [[ARWorldTrackingConfiguration alloc] init];
@@ -350,14 +346,12 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   self.locationManager.delegate = self;
 }
 
-/*
-
 - (void)checkLocationPermission {
   CLAuthorizationStatus authorizationStatus;
   if (@available(iOS 14.0, *)) {
     authorizationStatus = self.locationManager.authorizationStatus;
   } else {
-    authorizationStatus = [CLLocationManager authorizationStatus];
+      authorizationStatus = [CLLocationManager authorizationStatus];
   }
   if (authorizationStatus == kCLAuthorizationStatusAuthorizedAlways ||
       authorizationStatus == kCLAuthorizationStatusAuthorizedWhenInUse) {
@@ -386,6 +380,8 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   self.clearAllAnchorsButton.hidden = YES;
 }
 
+/*
+
 - (SCNNode *)markerNodeIsTerrainAnchor:(BOOL)isTerrainAnchor {
   NSURL *objURL = [[NSBundle mainBundle] URLForResource:@"geospatial_marker" withExtension:@"obj"];
   MDLAsset *markerAsset = [[MDLAsset alloc] initWithURL:objURL];
@@ -406,6 +402,8 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   }
   return [SCNNode nodeWithMDLObject:markerObject];
 }
+
+*/
 
 - (void)setUpGARSession {
   if (self.garSession) {
@@ -450,6 +448,8 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
                                     }
                                   }];
 }
+
+/*
 
 - (void)addSavedAnchors {
   NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -884,13 +884,13 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
 #pragma mark - CLLocationManagerDelegate
 
 /** iOS < 14 用の認証コールバック。非推奨。ただし、デプロイメントターゲット >= 14.0 になるまでは必要。 */
-/*- (void)locationManager:(CLLocationManager *)locationManager
+- (void)locationManager:(CLLocationManager *)locationManager
     didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
   [self checkLocationPermission];
-}*/
+}
 
 /** iOS 14の認証コールバック。 */
-/*- (void)locationManagerDidChangeAuthorization:(CLLocationManager *)locationManager
+- (void)locationManagerDidChangeAuthorization:(CLLocationManager *)locationManager
     API_AVAILABLE(ios(14.0)) {
   [self checkLocationPermission];
 }
@@ -908,7 +908,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
 }
 
 #pragma mark - ARSCNViewDelegate
-- (nullable SCNNode *)renderer:(id<SCNSceneRenderer>)renderer nodeForAnchor:(ARAnchor *)anchor {
+/*- (nullable SCNNode *)renderer:(id<SCNSceneRenderer>)renderer nodeForAnchor:(ARAnchor *)anchor {
   return [[SCNNode alloc] init];
 }
 

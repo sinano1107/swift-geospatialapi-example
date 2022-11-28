@@ -7,6 +7,7 @@
 
 import UIKit
 import ARKit
+import ARCore
 
 private let kFontSize = CGFloat(14.0)
 
@@ -22,12 +23,30 @@ private let kPrivacyNoticeText = "このセッションを動かすために、G
 // プライバシーに関する内容を詳しく知るためのリンクです。
 private let kPrivacyNoticeLearnMoreURL = "https://developers.google.com/ar/data-privacy"
 
+// VPS可用性通知プロンプトのタイトル。
+private let kVPSAvailabilityTitle = "VPSはご利用いただけません"
+
+// VPS可用性通知プロンプトの内容。
+private let kVPSAvailabilityText = "現在地はVPSの通信エリアではありません。VPSが利用できない場合、セッションはGPS信号のみを使用します。"
+
+enum LocalizationState : Int {
+    case pretracking = 0
+    case localizing = 1
+    case localized = 2
+    case failed = 3
+}
+
 class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, CLLocationManagerDelegate {
     /** 位置情報の許可要求と確認に使用される位置情報マネージャー。 */
     private var locationManager: CLLocationManager?
     
     /** ARKit session. */
     private var arSession: ARSession?
+    
+    /**
+     * ARCoreセッション、地理空間ローカライズに使用。ロケーションパーミッションを取得後、作成される。
+     */
+    private var garSession: GARSession?
     
     /** AR対応のカメラ映像や3Dコンテンツを表示するビューです。 */
     private var scnView: ARSCNView?
@@ -59,11 +78,17 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     /** アンカー ID を SceneKit ノードにマッピングするディクショナリ。 */
     private var markerNodes: [UUID : SCNNode]?
     
+    /** ローカライズの試行を開始した最後の時間。失敗時のタイムアウトを実装するために使用します。 */
+    private var lastStartLocalizationDate: Date?
+    
     /** 地形アンカーIDを解決し始めた時間に対応させた辞書。 */
     private var terrainAnchorIDToStartTime: [UUID : NSDate]?
     
     /** 次のフレーム更新時に削除する終了した地形アンカーIDのセット。 */
     private var anchorIDsToRemove: Set<UUID>?
+    
+    /** 現在のローカライズの状態。 */
+    private var localizationState: LocalizationState?
     
     
     override func viewDidLoad() {
@@ -224,6 +249,13 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         present(alertController, animated: false)
     }
     
+    func showVPSUnavailableNotice() {
+        let alertController = UIAlertController(title: kVPSAvailabilityTitle, message: kVPSAvailabilityText, preferredStyle: .alert)
+        let continueAction = UIAlertAction(title: "継続", style: .default, handler: nil)
+        alertController.addAction(continueAction)
+        present(alertController, animated: false)
+    }
+    
     func setUpARSession() {
         let configuration = ARWorldTrackingConfiguration()
         configuration.worldAlignment = .gravity
@@ -240,6 +272,80 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         locationManager?.delegate = self
     }
     
+    func checkLocationPermission() {
+        var authorizationStatus: CLAuthorizationStatus
+        if #available(iOS 14.0, *) {
+            authorizationStatus = CLAuthorizationStatus(rawValue: locationManager!.authorizationStatus.rawValue)!
+        } else {
+            authorizationStatus = CLLocationManager.authorizationStatus()
+        }
+        if authorizationStatus == .authorizedAlways || authorizationStatus == .authorizedWhenInUse {
+            if #available(iOS 14.0, *) {
+                if locationManager?.accuracyAuthorization != .fullAccuracy {
+                    setErrorStatus("位置情報は完全な精度で許可されたものではありません。")
+                    return
+                }
+            }
+            // VPSの可用性を確認するために、デバイスの位置をリクエストします。
+            locationManager!.requestLocation()
+            setUpGARSession()
+        } else if (authorizationStatus == .notDetermined) {
+            // ARCoreのセッションを構成する前に、アプリが責任を持ってロケーションパーミッションを取得する必要があります。
+            // ARCoreはロケーションパーミッションのシステムプロンプトを発生させません。
+            locationManager?.requestWhenInUseAuthorization()
+        } else {
+            setErrorStatus("位置情報の取得が拒否または制限されている。")
+        }
+    }
+    
+    func setErrorStatus(_ message: String) {
+        statusLabel?.text = message
+        addAnchorButton?.isHidden = true
+        tapScreenLabel?.isHidden = true
+        clearAllAnchorsButton?.isHidden = true
+    }
+    
+    func setUpGARSession() {
+        if (garSession != nil) {
+            return
+        }
+        
+        do {
+            garSession = try GARSession(apiKey: "AIzaSyAuj570MWxvfjTNwAYvHFvIK_uF1ozfIhs", bundleIdentifier: nil)
+        } catch let error {
+            setErrorStatus("GARSessionの作成に失敗しました: \(error)")
+            return
+        }
+        
+        localizationState = .failed
+        
+        if !(garSession?.isGeospatialModeSupported(.enabled))! {
+            setErrorStatus("GARGeospatialModeEnabled は、このデバイスではサポートされていません。")
+            return
+        }
+        
+        let configuration = GARSessionConfiguration()
+        configuration.geospatialMode = .enabled
+        
+        var error: NSError? = nil
+        garSession!.setConfiguration(configuration, error: &error)
+        if error != nil {
+            setErrorStatus("GARSessionの設定に失敗しました: \(error!.code)")
+            return
+        }
+        
+        localizationState = .pretracking
+        lastStartLocalizationDate = Date()
+    }
+    
+    func checkVPSAvailability(withCoordinate coordinate: CLLocationCoordinate2D) {
+        garSession!.checkVPSAvailability(coordinate: coordinate) { availability in
+            if availability != GARVPSAvailability.available {
+                self.showVPSUnavailableNotice()
+            }
+        }
+    }
+    
     @objc
     func addAnchorButtonPressed() {
         print("アンカーを追加する")
@@ -248,5 +354,28 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     @objc
     func clearAllAnchorsButtonPressed() {
         print("アンカーを全てクリアする")
+    }
+    
+    // MARK: - CLLocationManagerDelegate
+    
+    /** iOS < 14 用の認証コールバック。非推奨。ただし、デプロイメントターゲット >= 14.0 になるまでは必要。 */
+    func locationManager(locationManager: CLLocationManager, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
+        checkLocationPermission()
+    }
+    
+    /** iOS 14の認証コールバック。 */
+    @available(iOS 14.0, *)
+    func locationManagerDidChangeAuthorization(_ locationManager: CLLocationManager) {
+        checkLocationPermission()
+    }
+    
+    func locationManager(_ locationManager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let location = locations.last {
+            checkVPSAvailability(withCoordinate: location.coordinate)
+        }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("位置取得エラー: \(error)")
     }
 }
