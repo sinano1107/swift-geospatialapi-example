@@ -82,7 +82,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     private var scene: SCNScene!
     
     /** 画面上部に地球追跡の状態を表示するためのラベル。 */
-    private var trackingLabel: UILabel?
+    private var trackingLabel: UILabel!
     
     /** 画面下部のステータス表示に使用するラベル。 */
     private var statusLabel: UILabel?
@@ -153,14 +153,13 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         let boldFont = UIFont.boldSystemFont(ofSize: kFontSize)
         
         // trackingLabelを初期化
-        let trackingLabel = UILabel()
+        trackingLabel = UILabel()
         trackingLabel.translatesAutoresizingMaskIntoConstraints = false
         trackingLabel.font = font
         trackingLabel.textColor = UIColor.white
         trackingLabel.backgroundColor = UIColor(white: 0, alpha: 0.5)
         trackingLabel.numberOfLines = 6
-        self.trackingLabel = trackingLabel
-        self.scnView.addSubview(trackingLabel)
+        scnView.addSubview(trackingLabel)
         
         // tapScreenLabelを初期化
         let tapScreenLabel = UILabel()
@@ -532,15 +531,15 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         if localizationState == .failed {
             if earth.earthState != .enabled {
                 let earthState = stringFromGAREarthState(earth.earthState)
-                trackingLabel?.text = "Bad EarthState: \(earthState)"
+                trackingLabel.text = "Bad EarthState: \(earthState)"
             } else {
-                trackingLabel?.text = ""
+                trackingLabel.text = ""
             }
             return
         }
         
         if earth.trackingState == .paused {
-            trackingLabel?.text = "Not racking."
+            trackingLabel.text = "Not racking."
             return
         }
         
