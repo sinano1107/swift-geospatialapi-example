@@ -31,11 +31,7 @@ private let kLocalizationTip = "近な建物やお店、看板などにカメラ
 private let kLocalizationComplete = "ローカライズ完了"
 private let kLocalizationFailureMessage = "ローカライズができない。\n一度アプリを終了し、再度アプリを起動してください。"
 
-private let kGeospatialTransformFormat = """
-LAT/LONG（緯度/経度）: %.6f°, %.6f°\n    ACCURACY（精度）: %.2fm
-\nALTITUDE（高度）: %.2fm\n    ACCURACY（精度）: %.2fm
-\n HEADING（方位）: %.1f°\n    ACCURACY（精度）: %.1f°
-"""
+private let kGeospatialTransformFormat = "LAT/LONG（緯度/経度）: %.6f°, %.6f°\n    ACCURACY（精度）: %.2fm\nALTITUDE（高度）: %.2fm\n    ACCURACY（精度）: %.2fm\nHEADING（方位）: %.1f°\n    ACCURACY（精度）: %.1f°"
 
 private let kFontSize = CGFloat(14.0)
 
@@ -408,7 +404,8 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     
     func addSavedAnchors() {
         let defaults = UserDefaults.standard
-        let savedAnchors = defaults.array(forKey: kSavedAnchorsUserDefaultsKey) as! [[String : NSNumber]]
+        let savedAnchors: [[String : NSNumber]] = defaults.array(forKey: kSavedAnchorsUserDefaultsKey) as? [[String : NSNumber]] ?? []
+        print(savedAnchors)
         for savedAnchor in savedAnchors {
             let latitude = savedAnchor["latitude"]!.doubleValue
             let longitude = savedAnchor["longitude"]!.doubleValue
@@ -688,7 +685,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         
         if shouldSave {
             let defaults = UserDefaults.standard
-            let savedAnchors = defaults.array(forKey: kSavedAnchorsUserDefaultsKey) as! [[String : NSNumber]]
+            let savedAnchors: [[String : NSNumber]] = defaults.array(forKey: kSavedAnchorsUserDefaultsKey) as? [[String : NSNumber]] ?? []
             var newSavedAnchors = savedAnchors
             if useHeading {
                 newSavedAnchors.append([
@@ -772,14 +769,36 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     
     @objc
     func addAnchorButtonPressed() {
-        // TODO: ここの翻訳
-        print("アンカーを追加する")
+        // このボタンは、現在トラッキング中でなければ非表示になるので、nilにすることはできません。
+        guard let geospatialTransform = garFrame.earth?.cameraGeospatialTransform else { return }
+        if isTerrainAnchorMode {
+            addTerrainAnchorWithCoordinate(geospatialTransform.coordinate,
+                                           heading: geospatialTransform.heading,
+                                           eastUpSouthQTarget: simd_quaternion(0, 0, 0, 1),
+                                           useHeading: true,
+                                           shouldSave: true)
+        } else {
+            addAnchorWithCoordinate(geospatialTransform.coordinate,
+                                    altitude: geospatialTransform.altitude,
+                                    heading: geospatialTransform.heading,
+                                    eastUpSouthQTarget: simd_quaternion(0, 0, 0, 1),
+                                    useHeading: true,
+                                    shouldSave: true)
+        }
+        islastClickedTerrainAnchorButton = isTerrainAnchorMode
     }
     
     @objc
     func clearAllAnchorsButtonPressed() {
-        // TODO: ここの翻訳
-        print("アンカーを全てクリアする")
+        for anchor in garFrame.anchors {
+            garSession?.remove(anchor)
+        }
+        for node in markerNodes.values {
+            node.removeFromParentNode()
+        }
+        markerNodes.removeAll()
+        UserDefaults.standard.removeObject(forKey: kSavedAnchorsUserDefaultsKey)
+        islastClickedTerrainAnchorButton = false
     }
     
     // MARK: - CLLocationManagerDelegate
