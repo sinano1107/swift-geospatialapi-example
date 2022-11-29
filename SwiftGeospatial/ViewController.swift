@@ -560,6 +560,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             geospatialTransform.horizontalAccuracy,
             geospatialTransform.altitude,
             geospatialTransform.verticalAccuracy,
+            heading,
             geospatialTransform.headingAccuracy
         )
     }
