@@ -109,7 +109,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     private var markerNodes: [UUID : SCNNode]!
     
     /** ローカライズの試行を開始した最後の時間。失敗時のタイムアウトを実装するために使用します。 */
-    private var lastStartLocalizationDate: Date?
+    private var lastStartLocalizationDate: Date!
     
     /** 地形アンカーIDを解決し始めた時間に対応させた辞書。 */
     private var terrainAnchorIDToStartTime: [UUID : Date]!
@@ -456,7 +456,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
                         addSavedAnchors()
                         restoredSavedAnchors = true
                     }
-                } else if now.timeIntervalSince(lastStartLocalizationDate!) >= kLocalizationFailureTime {
+                } else if now.timeIntervalSince(lastStartLocalizationDate) >= kLocalizationFailureTime {
                     localizationState = .failed
                 }
             } else {
