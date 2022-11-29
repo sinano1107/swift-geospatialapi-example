@@ -73,7 +73,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     /**
      * ARCoreセッション、地理空間ローカライズに使用。ロケーションパーミッションを取得後、作成される。
      */
-    private var garSession: GARSession?
+    private var garSession: GARSession!
     
     /** AR対応のカメラ映像や3Dコンテンツを表示するビューです。 */
     private var scnView: ARSCNView!
@@ -374,7 +374,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         
         localizationState = .failed
         
-        if !(garSession?.isGeospatialModeSupported(.enabled))! {
+        if !(garSession.isGeospatialModeSupported(.enabled)) {
             setErrorStatus("GARGeospatialModeEnabled は、このデバイスではサポートされていません。")
             return
         }
@@ -672,7 +672,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         // アンカーの最初のスナップショット（これは不変です）だけです。
         // フレームごとに更新された値を取得するには、|GARFrame.anchors| で更新されたスナップショットを使用します。
         do {
-            try garSession!.createAnchor(
+            try garSession.createAnchor(
                 coordinate: coordinate,
                 altitude: altitude,
                 eastUpSouthQAnchor: eastUpSouthQAnchor!
@@ -728,7 +728,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             // |createAnchorWithCoordinate:altitude:eastUpSouthQAnchor:error:| の戻り値は、
             // アンカーの最初のスナップショット（これは不変です）だけです。
             // フレームごとに更新された値を取得するには、|GARFrame.anchors| で更新されたスナップショットを使用します。
-            let anchor = try garSession!.createAnchorOnTerrain(
+            let anchor = try garSession.createAnchorOnTerrain(
                 coordinate: coordinate,
                 altitudeAboveTerrain: 0,
                 eastUpSouthQAnchor: eastUpSouthQAnchor!
@@ -790,7 +790,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     @objc
     func clearAllAnchorsButtonPressed() {
         for anchor in garFrame.anchors {
-            garSession?.remove(anchor)
+            garSession.remove(anchor)
         }
         for node in markerNodes.values {
             node.removeFromParentNode()
@@ -814,10 +814,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         let rayCastResults = arSession.raycast(rayCastQuery)
         
         if rayCastResults.count > 0 {
-            guard
-                let result = rayCastResults.first,
-                let garSession = garSession
-            else { return }
+            guard let result = rayCastResults.first else { return }
 
             var geospatialTransform: GARGeospatialTransform?
             do {
@@ -929,7 +926,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         if garSession == nil || localizationState == .failed {
             return
         }
-        let garFrame = try! garSession!.update(frame)
+        let garFrame = try! garSession.update(frame)
         updateWithGARFrame(garFrame)
     }
 }
