@@ -68,7 +68,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     private var locationManager: CLLocationManager?
     
     /** ARKit session. */
-    private var arSession: ARSession?
+    private var arSession: ARSession!
     
     /**
      * ARCoreセッション、地理空間ローカライズに使用。ロケーションパーミッションを取得後、作成される。
@@ -76,7 +76,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     private var garSession: GARSession?
     
     /** AR対応のカメラ映像や3Dコンテンツを表示するビューです。 */
-    private var scnView: ARSCNView?
+    private var scnView: ARSCNView!
     
     /** マーカーをレンダリングするために使用される SceneKit のシーン。 */
     private var scene: SCNScene?
@@ -138,11 +138,10 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         terrainAnchorIDToStartTime = [:]
         anchorIDsToRemove = []
         
-        let scnView = ARSCNView()
+        scnView = ARSCNView()
         scnView.translatesAutoresizingMaskIntoConstraints = false
         scnView.automaticallyUpdatesLighting = true
         scnView.autoenablesDefaultLighting = true
-        self.scnView = scnView
         scene = scnView.scene
         arSession = scnView.session
         scnView.delegate = self
@@ -161,7 +160,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         trackingLabel.backgroundColor = UIColor(white: 0, alpha: 0.5)
         trackingLabel.numberOfLines = 6
         self.trackingLabel = trackingLabel
-        self.scnView!.addSubview(trackingLabel)
+        self.scnView.addSubview(trackingLabel)
         
         // tapScreenLabelを初期化
         let tapScreenLabel = UILabel()
@@ -173,7 +172,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         tapScreenLabel.text = "画面をタップしてアンカーを作成"
         tapScreenLabel.isHidden = true
         self.tapScreenLabel = tapScreenLabel
-        self.scnView!.addSubview(tapScreenLabel)
+        self.scnView.addSubview(tapScreenLabel)
         
         // statusLabelを初期化
         let statusLabel = UILabel()
@@ -183,7 +182,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         statusLabel.backgroundColor = UIColor(white: 0, alpha: 0.5)
         statusLabel.numberOfLines = 2
         self.statusLabel = statusLabel
-        self.scnView!.addSubview(statusLabel)
+        self.scnView.addSubview(statusLabel)
         
         // addAnchorButtonを初期化
         let addAnchorButton = UIButton(type: .system)
@@ -208,7 +207,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         switchLabel.textColor = UIColor.white
         switchLabel.numberOfLines = 1
         self.switchLabel = switchLabel
-        self.scnView!.addSubview(switchLabel)
+        self.scnView.addSubview(switchLabel)
         self.switchLabel!.text = "地形"
         
         // clearAllAnchorsButtonを初期化
@@ -300,9 +299,9 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         configuration.worldAlignment = .gravity
         // オプションです。地形アンカーを地面に設置する際の動的な位置合わせを支援します。
         configuration.planeDetection = .horizontal
-        arSession?.delegate = self
+        arSession.delegate = self
         // ARセッションを開始する - 初回はカメラの許可を求めるプロンプトが表示されます。
-        arSession?.run(configuration)
+        arSession.run(configuration)
         
         locationManager = CLLocationManager()
         // これにより、メインスレッドで非同期に |locationManager:didChangeAuthorizationStatus:| または
@@ -799,6 +798,52 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         markerNodes.removeAll()
         UserDefaults.standard.removeObject(forKey: kSavedAnchorsUserDefaultsKey)
         islastClickedTerrainAnchorButton = false
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if touches.count < 1 {
+            return
+        }
+        if garFrame.anchors.count >= kMaxAnchors {
+            return
+        }
+        
+        guard let touch = touches.first else { return }
+        let touchLocation = touch.location(in: scnView)
+        guard let rayCastQuery = scnView.raycastQuery(from: touchLocation, allowing: .existingPlaneGeometry, alignment: .horizontal) else { return }
+        let rayCastResults = arSession.raycast(rayCastQuery)
+        
+        if rayCastResults.count > 0 {
+            guard
+                let result = rayCastResults.first,
+                let garSession = garSession
+            else { return }
+
+            var geospatialTransform: GARGeospatialTransform?
+            do {
+                geospatialTransform = try garSession.geospatialTransform(transform: result.worldTransform)
+            } catch let error {
+                print("GARGeospatialTransform への変換トランスフォームの追加エラー: \(error)")
+                return
+            }
+            
+            guard let geospatialTransform = geospatialTransform else { return }
+            if isTerrainAnchorMode {
+                addTerrainAnchorWithCoordinate(geospatialTransform.coordinate,
+                                               heading: 0,
+                                               eastUpSouthQTarget: geospatialTransform.eastUpSouthQTarget,
+                                               useHeading: false,
+                                               shouldSave: true)
+            } else {
+                addAnchorWithCoordinate(geospatialTransform.coordinate,
+                                        altitude: geospatialTransform.altitude,
+                                        heading: 0,
+                                        eastUpSouthQTarget: geospatialTransform.eastUpSouthQTarget,
+                                        useHeading: false,
+                                        shouldSave: true)
+            }
+            islastClickedTerrainAnchorButton = isTerrainAnchorMode
+        }
     }
     
     // MARK: - CLLocationManagerDelegate
