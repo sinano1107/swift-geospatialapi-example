@@ -94,7 +94,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     private var addAnchorButton: UIButton!
     
     /** WGS84アンカーまたはTerrainアンカーを作成するためのUISwitch。 */
-    private var terrainAnchorSwitch: UISwitch?
+    private var terrainAnchorSwitch: UISwitch!
     
     /** terrainAnchorSwitchのラベルです。 */
     private var switchLabel: UILabel?
@@ -191,10 +191,9 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         view.addSubview(addAnchorButton)
         
         // terrainAnchorSwitchを初期化
-        let terrainAnchorSwitch = UISwitch()
+        terrainAnchorSwitch = UISwitch()
         terrainAnchorSwitch.translatesAutoresizingMaskIntoConstraints = false
-        self.view.addSubview(terrainAnchorSwitch)
-        self.terrainAnchorSwitch = terrainAnchorSwitch
+        view.addSubview(terrainAnchorSwitch)
         
         // switchLabelを初期化
         let switchLabel = UILabel()
@@ -618,7 +617,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         case .none:
             print("none")
         }
-        isTerrainAnchorMode = terrainAnchorSwitch?.isOn
+        isTerrainAnchorMode = terrainAnchorSwitch.isOn
     }
     
     func terrainStateString(_ terrainAnchorState: GARTerrainAnchorState) -> String {
