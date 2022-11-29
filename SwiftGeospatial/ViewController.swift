@@ -85,7 +85,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     private var trackingLabel: UILabel!
     
     /** 画面下部のステータス表示に使用するラベル。 */
-    private var statusLabel: UILabel?
+    private var statusLabel: UILabel!
     
     /** 画面をタップしてアンカーを作成するヒントを表示するためのラベルです。 */
     private var tapScreenLabel: UILabel?
@@ -174,14 +174,13 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         self.scnView.addSubview(tapScreenLabel)
         
         // statusLabelを初期化
-        let statusLabel = UILabel()
+        statusLabel = UILabel()
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
         statusLabel.font = font
         statusLabel.textColor = UIColor.white
         statusLabel.backgroundColor = UIColor(white: 0, alpha: 0.5)
         statusLabel.numberOfLines = 2
-        self.statusLabel = statusLabel
-        self.scnView.addSubview(statusLabel)
+        scnView.addSubview(statusLabel)
         
         // addAnchorButtonを初期化
         let addAnchorButton = UIButton(type: .system)
@@ -233,7 +232,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         trackingLabel.heightAnchor.constraint(equalToConstant: 140).isActive = true
         
         // tapScreenLabel
-        tapScreenLabel.bottomAnchor.constraint(equalTo: self.statusLabel!.topAnchor).isActive = true
+        tapScreenLabel.bottomAnchor.constraint(equalTo: statusLabel.topAnchor).isActive = true
         tapScreenLabel.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
         tapScreenLabel.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
         tapScreenLabel.heightAnchor.constraint(equalToConstant: 20).isActive = true
@@ -336,7 +335,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     }
     
     func setErrorStatus(_ message: String) {
-        statusLabel?.text = message
+        statusLabel.text = message
         addAnchorButton?.isHidden = true
         tapScreenLabel?.isHidden = true
         clearAllAnchorsButton?.isHidden = true
@@ -595,26 +594,26 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
                 }
             }
             if message != nil {
-                statusLabel?.text = message
+                statusLabel.text = message
             } else if garFrame.anchors.count == 0 {
-                statusLabel?.text = kLocalizationComplete
+                statusLabel.text = kLocalizationComplete
             } else if !islastClickedTerrainAnchorButton {
-                statusLabel?.text = "Num anchors: \(garFrame.anchors.count)"
+                statusLabel.text = "Num anchors: \(garFrame.anchors.count)"
             }
             clearAllAnchorsButton?.isHidden = garFrame.anchors.count == 0
             addAnchorButton?.isHidden = garFrame.anchors.count >= kMaxAnchors
             break
         case .pretracking:
-            statusLabel?.text = kPretrackingMessage
+            statusLabel.text = kPretrackingMessage
             break
         case .localizing:
-            statusLabel?.text = kLocalizationTip
+            statusLabel.text = kLocalizationTip
             addAnchorButton?.isHidden = true
             tapScreenLabel?.isHidden = true
             clearAllAnchorsButton?.isHidden = true
             break
         case .failed:
-            statusLabel?.text = kLocalizationFailureMessage
+            statusLabel.text = kLocalizationFailureMessage
             addAnchorButton?.isHidden = true
             tapScreenLabel?.isHidden = true
             clearAllAnchorsButton?.isHidden = true
@@ -735,7 +734,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             )
             terrainAnchorIDToStartTime[anchor.identifier] = Date()
         } catch GARSessionError.resourceExhausted {
-            statusLabel!.text = "地形アンカーが多すぎるので、すでに保持されている。すべてのアンカーをクリアして、新しいアンカーを作成してください。"
+            statusLabel.text = "地形アンカーが多すぎるので、すでに保持されている。すべてのアンカーをクリアして、新しいアンカーを作成してください。"
             return
         } catch let error {
             print("アンカー追加エラー: \(error)")
