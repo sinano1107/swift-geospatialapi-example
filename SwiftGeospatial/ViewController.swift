@@ -299,9 +299,9 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         configuration.worldAlignment = .gravity
         // オプションです。地形アンカーを地面に設置する際の動的な位置合わせを支援します。
         configuration.planeDetection = .horizontal
-        arSession.delegate = self
+        arSession?.delegate = self
         // ARセッションを開始する - 初回はカメラの許可を求めるプロンプトが表示されます。
-        arSession.run(configuration)
+        arSession?.run(configuration)
         
         locationManager = CLLocationManager()
         // これにより、メインスレッドで非同期に |locationManager:didChangeAuthorizationStatus:| または
