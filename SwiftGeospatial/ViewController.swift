@@ -401,7 +401,6 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     func addSavedAnchors() {
         let defaults = UserDefaults.standard
         let savedAnchors: [[String : NSNumber]] = defaults.array(forKey: kSavedAnchorsUserDefaultsKey) as? [[String : NSNumber]] ?? []
-        print(savedAnchors)
         for savedAnchor in savedAnchors {
             let latitude = savedAnchor["latitude"]!.doubleValue
             let longitude = savedAnchor["longitude"]!.doubleValue
