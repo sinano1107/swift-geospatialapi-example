@@ -10,6 +10,8 @@ import ARKit
 import ARCore
 import SceneKit.ModelIO
 
+// Thresholds for 'good enough' accuracy. These can be tuned for the application. We use both 'low'
+// and 'high' values here to avoid flickering state changes.
 // 「十分な」精度のための閾値。これらはアプリケーションに応じて調整することができます。
 // ここでは、状態の変化がちらつくのを避けるために、「低」と「高」の両方の値を使用します。
 private let kHorizontalAccuracyLowThreshold: Double = 10
@@ -17,19 +19,22 @@ private let kHorizontalAccuracyhighThreshold: Double = 20
 private let kHeadingAccuracyLowThreshold: Double = 15
 private let kHeadingAccuracyHighThreshold: Double = 25
 
+// Time after which the app gives up if good enough accuracy is not achieved.
 // 十分な精度が得られない場合、アプリが諦めるまでの時間。
 private let kLocalizationFailureTime: TimeInterval = 3 * 60.0
-
+// Time after showing resolving terrain anchors no result yet message.
 // 地形アンカーを解決するメッセージが表示された後、時間が経過しました。
 private let kDurationNoTerrainAnchorResult: TimeInterval = 10
 
+// This sample allows up to 5 simultaneous anchors, although in principal ARCore supports an
+// unlimited number.
 // このサンプルでは最大5つのアンカーを同時に使用できますが、ARCoreは原則的に無制限にサポートします。
 private let kMaxAnchors = 5
 
-private let kPretrackingMessage = "アンカーを設定するデバイスのローカライズ。"
-private let kLocalizationTip = "近な建物やお店、看板などにカメラを向けてみましょう。"
-private let kLocalizationComplete = "ローカライズ完了"
-private let kLocalizationFailureMessage = "ローカライズができない。\n一度アプリを終了し、再度アプリを起動してください。"
+private let kPretrackingMessage = "Localizing your device to set anchor.\nアンカーを設定するデバイスのローカライズ。"
+private let kLocalizationTip = "Point your camera at buildings, stores, and signs near you.\n身近な建物やお店、看板などにカメラを向けてみましょう。"
+private let kLocalizationComplete = "Localization complete.\nローカライズ完了"
+private let kLocalizationFailureMessage = "Localization not possible.\nClose and open the app to restart.\nローカライズができない。\n一度アプリを終了し、再度アプリを起動してください。"
 
 private let kGeospatialTransformFormat =
 """
@@ -40,26 +45,41 @@ HEADING（方位）: %.1f°\n    ACCURACY（精度）: %.1f°
 
 private let kFontSize = CGFloat(14.0)
 
+// Anchor coordinates are persisted between sessions.
 // アンカー座標は、セッション間で永続化されます。
 private let kSavedAnchorsUserDefaultsKey = "anchors"
 
+// Show privacy notice before using features.
 // 機能を使用する前にプライバシーポリシーを表示する。
 private let kPrivacyNoticeUserDefaultsKey = "privacy_notice_acknowledged"
 
+// Title of the privacy notice prompt.
 // プライバシー通知プロンプトのタイトル。
-private let kPrivacyNoticeTitle = "現実世界におけるAR"
+private let kPrivacyNoticeTitle = "AR in the real world\n現実世界におけるAR"
 
+// Content of the privacy notice prompt.
 // 個人情報保護に関する注意喚起の内容
-private let kPrivacyNoticeText = "このセッションを動かすために、Googleはあなたのカメラからのビジュアルデータを処理します。"
+private let kPrivacyNoticeText =
+"""
+Your current location does not have VPS coverage. Your session will be using your GPS signal only if VPS is not available.
+このセッションを動かすために、Googleはあなたのカメラからのビジュアルデータを処理します。
+"""
 
+// Link to learn more about the privacy content.
 // プライバシーに関する内容を詳しく知るためのリンクです。
 private let kPrivacyNoticeLearnMoreURL = "https://developers.google.com/ar/data-privacy"
 
+// Title of the VPS availability notice prompt.
 // VPS可用性通知プロンプトのタイトル。
-private let kVPSAvailabilityTitle = "VPSはご利用いただけません"
+private let kVPSAvailabilityTitle = "VPS not available\nVPSはご利用いただけません"
 
+// Content of the VPS availability notice prompt.
 // VPS可用性通知プロンプトの内容。
-private let kVPSAvailabilityText = "現在地はVPSの通信エリアではありません。VPSが利用できない場合、セッションはGPS信号のみを使用します。"
+private let kVPSAvailabilityText = 
+"""
+Your current location does not have VPS coverage. Your session will be using your GPS signal only if VPS is not available.
+現在地はVPSの通信エリアではありません。VPSが利用できない場合、セッションはGPS信号のみを使用します。
+"""
 
 enum LocalizationState : Int {
     case pretracking = 0
@@ -69,74 +89,128 @@ enum LocalizationState : Int {
 }
 
 class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate, CLLocationManagerDelegate {
-    /** 位置情報の許可要求と確認に使用される位置情報マネージャー。 */
+    /**
+     Location manager used to request and check for location permissions.
+     位置情報の許可要求と確認に使用される位置情報マネージャー。
+     */
     private var locationManager: CLLocationManager?
     
     /** ARKit session. */
     private var arSession: ARSession!
     
     /**
-     * ARCoreセッション、地理空間ローカライズに使用。ロケーションパーミッションを取得後、作成される。
+     ARCore session, used for geospatial localization. Created after obtaining location permission.
+     ARCoreセッション、地理空間ローカライズに使用。ロケーションパーミッションを取得後、作成される。
      */
     private var garSession: GARSession!
     
-    /** AR対応のカメラ映像や3Dコンテンツを表示するビューです。 */
+    /**
+     A view that shows an AR enabled camera feed and 3D content.
+     AR対応のカメラ映像や3Dコンテンツを表示するビューです。
+     */
     private var scnView: ARSCNView!
     
-    /** マーカーをレンダリングするために使用される SceneKit のシーン。 */
+    /**
+     SceneKit scene used for rendering markers.
+     マーカーをレンダリングするために使用される SceneKit のシーン。
+     */
     private var scene: SCNScene!
     
-    /** 画面上部に地球追跡の状態を表示するためのラベル。 */
+    /**
+     Label used to show Earth tracking state at top of screen.
+     画面上部に地球追跡の状態を表示するためのラベル。
+     */
     private var trackingLabel: UILabel!
     
-    /** 画面下部のステータス表示に使用するラベル。 */
+    /**
+     Label used to show status at bottom of screen.
+     画面下部のステータス表示に使用するラベル。
+     */
     private var statusLabel: UILabel!
     
-    /** 画面をタップしてアンカーを作成するヒントを表示するためのラベルです。 */
+    /**
+     Label used to show hint that tap screen to create anchors.
+     画面をタップしてアンカーを作成するヒントを表示するためのラベルです。
+     */
     private var tapScreenLabel: UILabel!
     
-    /** 新しい地理空間アンカーを配置するために使用するボタンです。 */
+    /**Button used to place a new geospatial anchor.
+     新しい地理空間アンカーを配置するために使用するボタンです。
+     */
     private var addAnchorButton: UIButton!
     
-    /** WGS84アンカーまたはTerrainアンカーを作成するためのUISwitch。 */
+    /**
+     UISwitch for creating WGS84 anchor or Terrain anchor.
+     WGS84アンカーまたはTerrainアンカーを作成するためのUISwitch。
+     */
     private var terrainAnchorSwitch: UISwitch!
     
-    /** terrainAnchorSwitchのラベルです。 */
+    /**
+     Label of terrainAnchorSwitch.
+     terrainAnchorSwitchのラベルです。
+     */
     private var switchLabel: UILabel!
     
-    /** 既存のアンカーをすべてクリアするためのボタンです。 */
+    /** Button used to clear all existing anchors.
+     既存のアンカーをすべてクリアするためのボタンです。
+     */
     private var clearAllAnchorsButton: UIButton!
     
-    /** 直近のGARFrame。 */
+    /**
+     The most recent GARFrame.
+     直近のGARFrame。
+     */
     private var garFrame: GARFrame!
     
-    /** アンカー ID を SceneKit ノードにマッピングするディクショナリ。 */
+    /**
+     Dictionary mapping anchor IDs to SceneKit nodes.
+     アンカー ID を SceneKit ノードにマッピングするディクショナリ。
+     */
     private var markerNodes: [UUID : SCNNode]!
     
-    /** ローカライズの試行を開始した最後の時間。失敗時のタイムアウトを実装するために使用します。 */
+    /**
+     The last time we started attempting to localize. Used to implement failure timeout.
+     ローカライズの試行を開始した最後の時間。失敗時のタイムアウトを実装するために使用します。
+     */
     private var lastStartLocalizationDate: Date!
     
-    /** 地形アンカーIDを解決し始めた時間に対応させた辞書。 */
+    /** Dictionary mapping terrain anchor IDs to time we started resolving.
+     地形アンカーIDを解決し始めた時間に対応させた辞書。
+     */
     private var terrainAnchorIDToStartTime: [UUID : Date]!
     
-    /** 次のフレーム更新時に削除する終了した地形アンカーIDのセット。 */
+    /**
+     Set of finished terrain anchor IDs to remove at next frame update.
+     次のフレーム更新時に削除する終了した地形アンカーIDのセット。
+     */
     private var anchorIDsToRemove: Set<UUID>!
     
-    /** 現在のローカライズの状態。 */
+    /**
+     The current localization state.
+     現在のローカライズの状態。
+     */
     private var localizationState: LocalizationState!
     
-    /** 前回から保存したアンカーを復元したかどうか。 */
+    /**
+     Whether we have restored anchors saved from the previous session.
+     前回から保存したアンカーを復元したかどうか。
+     */
     private var restoredSavedAnchors: Bool = false
     
-    /** 最後のアンカーが地形アンカーであるかどうか。 */
+    /**
+     Whether the last anchor is terrain anchor.
+     最後のアンカーが地形アンカーであるかどうか。
+     */
     private var islastClickedTerrainAnchorButton: Bool = false
     
-    /** テレインアンカーモードであるかどうか。 */
+    /**
+     Whether it is Terrain anchor mode.
+     テレインアンカーモードであるかどうか。
+     */
     private var isTerrainAnchorMode: Bool!
     
     
     override func viewDidLoad() {
-        print("Swift走ってます")
         super.viewDidLoad()
         
         markerNodes = [:]
@@ -157,7 +231,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         let font = UIFont.systemFont(ofSize: kFontSize)
         let boldFont = UIFont.boldSystemFont(ofSize: kFontSize)
         
-        // trackingLabelを初期化
+        // trackingLabel
         trackingLabel = UILabel()
         trackingLabel.translatesAutoresizingMaskIntoConstraints = false
         trackingLabel.font = font
@@ -166,7 +240,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         trackingLabel.numberOfLines = 6
         scnView.addSubview(trackingLabel)
         
-        // tapScreenLabelを初期化
+        // tapScreenLabel
         tapScreenLabel = UILabel()
         tapScreenLabel.translatesAutoresizingMaskIntoConstraints = false
         tapScreenLabel.font = boldFont
@@ -177,16 +251,16 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         tapScreenLabel.isHidden = true
         scnView.addSubview(tapScreenLabel)
         
-        // statusLabelを初期化
+        // statusLabel
         statusLabel = UILabel()
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
         statusLabel.font = font
         statusLabel.textColor = UIColor.white
         statusLabel.backgroundColor = UIColor(white: 0, alpha: 0.5)
-        statusLabel.numberOfLines = 2
+        statusLabel.numberOfLines = 5
         scnView.addSubview(statusLabel)
         
-        // addAnchorButtonを初期化
+        // addAnchorButton
         addAnchorButton = UIButton(type: .system)
         addAnchorButton.translatesAutoresizingMaskIntoConstraints = false
         addAnchorButton.setTitle("カメラアンカーを追加する", for: .normal)
@@ -195,12 +269,12 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         addAnchorButton.isHidden = true
         view.addSubview(addAnchorButton)
         
-        // terrainAnchorSwitchを初期化
+        // terrainAnchorSwitch
         terrainAnchorSwitch = UISwitch()
         terrainAnchorSwitch.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(terrainAnchorSwitch)
         
-        // switchLabelを初期化
+        // switchLabel
         switchLabel = UILabel()
         switchLabel.translatesAutoresizingMaskIntoConstraints = false
         switchLabel.font = boldFont
@@ -209,7 +283,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         scnView.addSubview(switchLabel)
         switchLabel.text = "地形"
         
-        // clearAllAnchorsButtonを初期化
+        // clearAllAnchorsButton
         clearAllAnchorsButton = UIButton(type: .system)
         clearAllAnchorsButton.translatesAutoresizingMaskIntoConstraints = false
         clearAllAnchorsButton.setTitle("全てのアンカーをクリアする", for: .normal)
@@ -218,7 +292,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         clearAllAnchorsButton.isHidden = true
         view.addSubview(clearAllAnchorsButton)
         
-        // アンカーの設定
+        // Anchors setting
         // scnView
         scnView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         scnView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
@@ -271,11 +345,11 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         }
         
         let alertController = UIAlertController(title: kPrivacyNoticeTitle, message: kPrivacyNoticeText, preferredStyle: .alert)
-        let getStartedAction = UIAlertAction(title: "スタート", style: .default) { action in
+        let getStartedAction = UIAlertAction(title: "Get started（スタート）", style: .default) { action in
             UserDefaults.standard.set(true, forKey: kPrivacyNoticeUserDefaultsKey)
             self.setUpARSession()
         }
-        let learnMoreAction = UIAlertAction(title: "詳細はこちら", style: .default) { action in
+        let learnMoreAction = UIAlertAction(title: "Learn more（詳細はこちら）", style: .default) { action in
             if let url = URL(string: kPrivacyNoticeLearnMoreURL) {
                 UIApplication.shared.open(url)
             }
@@ -287,7 +361,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     
     func showVPSUnavailableNotice() {
         let alertController = UIAlertController(title: kVPSAvailabilityTitle, message: kVPSAvailabilityText, preferredStyle: .alert)
-        let continueAction = UIAlertAction(title: "継続", style: .default, handler: nil)
+        let continueAction = UIAlertAction(title: "Continue（継続）", style: .default, handler: nil)
         alertController.addAction(continueAction)
         present(alertController, animated: false)
     }
@@ -295,13 +369,18 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     func setUpARSession() {
         let configuration = ARWorldTrackingConfiguration()
         configuration.worldAlignment = .gravity
+        // Optional. It will help the dynamic alignment of terrain anchors on ground.
         // オプションです。地形アンカーを地面に設置する際の動的な位置合わせを支援します。
         configuration.planeDetection = .horizontal
         arSession?.delegate = self
+        // Start AR session - this will prompt for camera permissions the first time.
         // ARセッションを開始する - 初回はカメラの許可を求めるプロンプトが表示されます。
         arSession?.run(configuration)
         
         locationManager = CLLocationManager()
+        // This will cause either |locationManager:didChangeAuthorizationStatus:| or
+        // |locationManagerDidChangeAuthorization:| (depending on iOS version) to be called asynchronously
+        // on the main thread. After obtaining location permission, we will set up the ARCore session.
         // これにより、メインスレッドで非同期に |locationManager:didChangeAuthorizationStatus:| または
         // |locationManagerDidChangeAuthorization:| (iOS バージョンによって異なる) が呼び出されます。
         // ロケーションパーミッションを取得したら、ARCoreのセッションを設定します。
@@ -318,19 +397,22 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         if authorizationStatus == .authorizedAlways || authorizationStatus == .authorizedWhenInUse {
             if #available(iOS 14.0, *) {
                 if locationManager?.accuracyAuthorization != .fullAccuracy {
-                    setErrorStatus("位置情報は完全な精度で許可されたものではありません。")
+                    setErrorStatus("Location permission not granted with full accuracy.（位置情報は完全な精度で許可されたものではありません。）")
                     return
                 }
             }
+            // Request device location for check VPS availability.
             // VPSの可用性を確認するために、デバイスの位置をリクエストします。
             locationManager!.requestLocation()
             setUpGARSession()
         } else if (authorizationStatus == .notDetermined) {
+            // The app is responsible for obtaining the location permission prior to configuring the ARCore
+            // session. ARCore will not cause the location permission system prompt.
             // ARCoreのセッションを構成する前に、アプリが責任を持ってロケーションパーミッションを取得する必要があります。
             // ARCoreはロケーションパーミッションのシステムプロンプトを発生させません。
             locationManager?.requestWhenInUseAuthorization()
         } else {
-            setErrorStatus("位置情報の取得が拒否または制限されている。")
+            setErrorStatus("Location permission denied or restricted.（位置情報の取得が拒否または制限されている。）")
         }
     }
     
@@ -366,14 +448,14 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         do {
             garSession = try GARSession(apiKey: "AIzaSyAuj570MWxvfjTNwAYvHFvIK_uF1ozfIhs", bundleIdentifier: nil)
         } catch let error {
-            setErrorStatus("GARSessionの作成に失敗しました: \(error)")
+            setErrorStatus("Failed to create GARSession（GARSessionの作成に失敗しました）: \(error)")
             return
         }
         
         localizationState = .failed
         
         if !(garSession.isGeospatialModeSupported(.enabled)) {
-            setErrorStatus("GARGeospatialModeEnabled は、このデバイスではサポートされていません。")
+            setErrorStatus("GARGeospatialModeEnabled is not supported on this device.（GARGeospatialModeEnabled は、このデバイスではサポートされていません。）")
             return
         }
         
@@ -383,7 +465,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         var error: NSError? = nil
         garSession!.setConfiguration(configuration, error: &error)
         if error != nil {
-            setErrorStatus("GARSessionの設定に失敗しました: \(error!.code)")
+            setErrorStatus("ailed to configure GARSession（GARSessionの設定に失敗しました）: \(error!.code)")
             return
         }
         
@@ -402,7 +484,6 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     func addSavedAnchors() {
         let defaults = UserDefaults.standard
         let savedAnchors: [[String : NSNumber]] = defaults.array(forKey: kSavedAnchorsUserDefaultsKey) as? [[String : NSNumber]] ?? []
-        print("セーブドアンカー: \(savedAnchors.count)")
         for savedAnchor in savedAnchors {
             let latitude = savedAnchor["latitude"]!.doubleValue
             let longitude = savedAnchor["longitude"]!.doubleValue
@@ -441,6 +522,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     }
     
     func updateLocalizationState() {
+        // This will be nil if not currently tracking.
         // 現在トラッキングを行なっていない場合はnilとなる。
         let geospatialTransform = garFrame.earth!.cameraGeospatialTransform
         let now = Date()
@@ -465,6 +547,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
                     localizationState = .failed
                 }
             } else {
+                // Use higher thresholds for exiting 'localized' state to avoid flickering state changes.
                 // ローカライズされた状態から抜け出す際に高いしきい値を使用することで、状態変化のちらつきを回避する。
                 if geospatialTransform == nil
                     || geospatialTransform!.horizontalAccuracy > kHorizontalAccuracyhighThreshold
@@ -479,6 +562,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     func updateMarkerNodes() {
         var currentAnchorIDs: Set<UUID> = []
         
+        // Add/update nodes for tracking anchors.
         // トラッキングアンカー用のノードを追加・更新しました。
         for anchor in garFrame.anchors {
             if anchor.trackingState != .tracking {
@@ -486,6 +570,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             }
             var node = markerNodes[anchor.identifier]
             if node == nil {
+                // Only render resolved Terrain Anchors and Geospatial anchors.
                 // 解決された地形アンカーと地理空間アンカーだけをレンダリングします
                 if anchor.terrainState == .success {
                     node = markerNodeIsTerrainAnchor(true)
@@ -501,6 +586,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             currentAnchorIDs.insert(anchor.identifier)
         }
         
+        // Remove nodes for anchors that are no longer tracking.
         // トラッキングが終了したアンカーのノードを削除します。
         for anchorID in markerNodes.keys {
             if !currentAnchorIDs.contains(anchorID) {
@@ -542,15 +628,20 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             return
         }
         
+        // This can't be nil if currently tracking and in a good EarthState.
         // 現在トラッキング中で、かつ良好なEarthStateであれば、これはゼロにはなりえません。
         guard let geospatialTransform = earth.cameraGeospatialTransform else { return }
         
+        // Display heading in range [-180, 180], with 0=North, instead of [0, 360), as required by the
+        // type CLLocationDirection.
         // CLLocationDirection 型で要求される [0, 360] の代わりに [-180, 180] (0=North) の範囲で方位を表示します。
         var heading = geospatialTransform.heading
         if heading > 180 {
             heading -= 360
         }
         
+        // Note: the altitude value here is relative to the WGS84 ellipsoid (equivalent to
+        // |CLLocation.ellipsoidalAltitude|).
         // 注意：ここでの高度値は、WGS84楕円体に対する相対値です（|CLLocation.ellipsoidalAltitude|に相当します）。
         trackingLabel?.text = String(
             format: kGeospatialTransformFormat,
@@ -572,6 +663,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             }
             anchorIDsToRemove.removeAll()
             var message: String?
+            // If there is a new terrain anchor state, show terrain anchor state.
             // 新しい地形アンカー状態がある場合、地形アンカー状態を表示する。
             for anchor in garFrame.anchors {
                 if anchor.terrainState == .none {
@@ -584,10 +676,16 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
                     let now = Date()
                     if anchor.terrainState == .taskInProgress {
                         if now.timeIntervalSince(terrainAnchorIDToStartTime[anchor.identifier]!) >= kDurationNoTerrainAnchorResult {
-                            message = "地形アンカーはまだ解決していません。\nVPSが使える地域であることをご確認ください。"
+                            message =
+                            """
+Still resolving the terrain anchor. Please make sure you\'re in an area that has VPS coverage.
+地形アンカーはまだ解決していません。
+VPSが使える地域であることをご確認ください。
+"""
                             anchorIDsToRemove.insert(anchor.identifier)
                         }
                     } else {
+                        // Remove it if task has finished.
                         // タスクが完了したら、削除してください。
                         anchorIDsToRemove.insert(anchor.identifier)
                     }
@@ -661,12 +759,17 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     ) {
         var eastUpSouthQAnchor: simd_quatf?
         if useHeading {
+            // The arrow of the 3D model points towards the Z-axis, while heading is measured clockwise from
+                // North.
             // 3Dモデルの矢印はZ軸を指し、ヘディングは北から時計回りに計測されます。
             let angle = Float((.pi / 180) * (180 - heading))
             eastUpSouthQAnchor = simd_quaternion(angle, 0, 1, 0)
         } else {
             eastUpSouthQAnchor = eastUpSouthQTarget
         }
+        // The return value of |createAnchorWithCoordinate:altitude:eastUpSouthQAnchor:error:| is just the
+        // first snapshot of the anchor (which is immutable). Use the updated snapshots in
+        // |GARFrame.anchors| to get updated values on a frame-by-frame basis.
         // |createAnchorWithCoordinate:altitude:eastUpSouthQAnchor:error:| の戻り値は、
         // アンカーの最初のスナップショット（これは不変です）だけです。
         // フレームごとに更新された値を取得するには、|GARFrame.anchors| で更新されたスナップショットを使用します。
@@ -677,7 +780,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
                 eastUpSouthQAnchor: eastUpSouthQAnchor!
             )
         } catch let error {
-            print("アンカー追加エラー: \(error)")
+            print("Error adding anchor（アンカー追加エラー）: \(error)")
             return
         }
         
@@ -716,6 +819,8 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     ) {
         var eastUpSouthQAnchor: simd_quatf?
         if useHeading {
+            // The arrow of the 3D model points towards the Z-axis, while heading is measured clockwise from
+            // North.
             // 3Dモデルの矢印はZ軸を指し、ヘディングは北から時計回りに計測されます。
             let angle = Float((.pi / 180) * (180 - heading))
             eastUpSouthQAnchor = simd_quaternion(angle, 0, 1, 0)
@@ -724,6 +829,9 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         }
         
         do {
+            // The return value of |createAnchorWithCoordinate:altitude:eastUpSouthQAnchor:error:| is just the
+            // first snapshot of the anchor (which is immutable). Use the updated snapshots in
+            // |GARFrame.anchors| to get updated values on a frame-by-frame basis.
             // |createAnchorWithCoordinate:altitude:eastUpSouthQAnchor:error:| の戻り値は、
             // アンカーの最初のスナップショット（これは不変です）だけです。
             // フレームごとに更新された値を取得するには、|GARFrame.anchors| で更新されたスナップショットを使用します。
@@ -734,10 +842,14 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             )
             terrainAnchorIDToStartTime[anchor.identifier] = Date()
         } catch GARSessionError.resourceExhausted {
-            statusLabel.text = "地形アンカーが多すぎるので、すでに保持されている。すべてのアンカーをクリアして、新しいアンカーを作成してください。"
+            statusLabel.text =
+"""
+Too many terrain anchors have already been held. Clear all anchors to create new ones.
+地形アンカーが多すぎるので、すでに保持されている。すべてのアンカーをクリアして、新しいアンカーを作成してください。
+"""
             return
         } catch let error {
-            print("アンカー追加エラー: \(error)")
+            print("Error adding anchor（追加エラー）: \(error)")
             return
         }
         
@@ -767,6 +879,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     
     @objc
     func addAnchorButtonPressed() {
+        // This button will be hidden if not currently tracking, so this can't be nil.
         // このボタンは、現在トラッキング中でなければ非表示になるので、nilにすることはできません。
         guard let geospatialTransform = garFrame.earth?.cameraGeospatialTransform else { return }
         if isTerrainAnchorMode {
@@ -819,7 +932,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             do {
                 geospatialTransform = try garSession.geospatialTransform(transform: result.worldTransform)
             } catch let error {
-                print("GARGeospatialTransform への変換トランスフォームの追加エラー: \(error)")
+                print("Error adding convert transform to GARGeospatialTransform（GARGeospatialTransform への変換トランスフォームの追加エラー）: \(error)")
                 return
             }
             
@@ -844,12 +957,18 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     
     // MARK: - CLLocationManagerDelegate
     
-    /** iOS < 14 用の認証コールバック。非推奨。ただし、デプロイメントターゲット >= 14.0 になるまでは必要。 */
+    /**
+     Authorization callback for iOS < 14. Deprecated, but needed until deployment target >= 14.0.
+     iOS < 14 用の認証コールバック。非推奨。ただし、デプロイメントターゲット >= 14.0 になるまでは必要。
+     */
     func locationManager(locationManager: CLLocationManager, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
         checkLocationPermission()
     }
     
-    /** iOS 14の認証コールバック。 */
+    /**
+     Authorization callback for iOS 14.
+     iOS 14の認証コールバック。
+     */
     @available(iOS 14.0, *)
     func locationManagerDidChangeAuthorization(_ locationManager: CLLocationManager) {
         checkLocationPermission()
@@ -862,7 +981,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("位置取得エラー: \(error)")
+        print("Error get location（位置取得エラー）: \(error)")
     }
     
     // MARK: - ARSCNViewDelegate
@@ -897,7 +1016,11 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             let planeAnchor = anchor as! ARPlaneAnchor
             
             let planeNode = node.childNodes.first!
-            assert(planeNode.geometry is SCNPlane, "planeNodeの子はSCNPlaneではありません。renderer:didAddNode:forAnchor:で何か問題があったのでしょうか？")
+            assert(planeNode.geometry is SCNPlane,
+"""
+planeNode's child is not an SCNPlane--did something go wrong in renderer:didAddNode:forAnchor:?
+（planeNodeの子はSCNPlaneではありません。renderer:didAddNode:forAnchor:で何か問題があったのでしょうか？）
+""")
             let plane = planeNode.geometry as! SCNPlane
             
             let width = planeAnchor.planeExtent.width
