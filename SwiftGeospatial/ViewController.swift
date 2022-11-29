@@ -79,7 +79,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     private var scnView: ARSCNView!
     
     /** マーカーをレンダリングするために使用される SceneKit のシーン。 */
-    private var scene: SCNScene?
+    private var scene: SCNScene!
     
     /** 画面上部に地球追跡の状態を表示するためのラベル。 */
     private var trackingLabel: UILabel?
@@ -495,7 +495,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
                     node = markerNodeIsTerrainAnchor(false)
                 }
                 markerNodes[anchor.identifier] = node
-                scene?.rootNode.addChildNode(node!)
+                scene.rootNode.addChildNode(node!)
             }
             guard let node = node else { return }
             node.simdTransform = anchor.transform
