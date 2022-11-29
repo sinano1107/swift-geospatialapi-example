@@ -446,7 +446,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         }
         
         do {
-            garSession = try GARSession(apiKey: "AIzaSyAuj570MWxvfjTNwAYvHFvIK_uF1ozfIhs", bundleIdentifier: nil)
+            garSession = try GARSession(apiKey: apiKey, bundleIdentifier: nil)
         } catch let error {
             setErrorStatus("Failed to create GARSession（GARSessionの作成に失敗しました）: \(error)")
             return

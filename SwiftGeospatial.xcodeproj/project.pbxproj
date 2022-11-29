@@ -18,6 +18,7 @@
 		9FCB503F29326CB300BE3285 /* geospatial_marker.obj in Resources */ = {isa = PBXBuildFile; fileRef = 9FCB503E29326CB300BE3285 /* geospatial_marker.obj */; };
 		9FCB50452933307000BE3285 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FCB50442933307000BE3285 /* ViewController.swift */; };
 		9FCB50662933368F00BE3285 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FCB502229325D3800BE3285 /* ViewController.m */; };
+		9FFE07B429367B9700B401DD /* APIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFE07B329367B9700B401DD /* APIKey.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,6 +40,7 @@
 		9FCB503E29326CB300BE3285 /* geospatial_marker.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = geospatial_marker.obj; path = ../../GeospatialExample/GeospatialExample/geospatial_marker.obj; sourceTree = "<group>"; };
 		9FCB50432933307000BE3285 /* SwiftGeospatial-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SwiftGeospatial-Bridging-Header.h"; sourceTree = "<group>"; };
 		9FCB50442933307000BE3285 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		9FFE07B329367B9700B401DD /* APIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKey.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,6 +93,7 @@
 				9FCB502129325D3800BE3285 /* ViewController.h */,
 				9FCB502229325D3800BE3285 /* ViewController.m */,
 				9FCB50442933307000BE3285 /* ViewController.swift */,
+				9FFE07B329367B9700B401DD /* APIKey.swift */,
 				9FCB502429325D3800BE3285 /* Main.storyboard */,
 				9FCB502729325D3900BE3285 /* Assets.xcassets */,
 				9FCB502929325D3900BE3285 /* LaunchScreen.storyboard */,
@@ -249,6 +252,7 @@
 				9FCB50452933307000BE3285 /* ViewController.swift in Sources */,
 				9FCB50662933368F00BE3285 /* ViewController.m in Sources */,
 				9FCB502E29325D3900BE3285 /* main.m in Sources */,
+				9FFE07B429367B9700B401DD /* APIKey.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
