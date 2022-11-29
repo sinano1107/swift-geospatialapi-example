@@ -100,7 +100,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     private var switchLabel: UILabel!
     
     /** 既存のアンカーをすべてクリアするためのボタンです。 */
-    private var clearAllAnchorsButton: UIButton?
+    private var clearAllAnchorsButton: UIButton!
     
     /** 直近のGARFrame。 */
     private var garFrame: GARFrame!
@@ -205,14 +205,13 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         switchLabel.text = "地形"
         
         // clearAllAnchorsButtonを初期化
-        let clearAllAnchorsButton = UIButton(type: .system)
+        clearAllAnchorsButton = UIButton(type: .system)
         clearAllAnchorsButton.translatesAutoresizingMaskIntoConstraints = false
         clearAllAnchorsButton.setTitle("全てのアンカーをクリアする", for: .normal)
         clearAllAnchorsButton.titleLabel?.font = boldFont
         clearAllAnchorsButton.addTarget(self, action: #selector(clearAllAnchorsButtonPressed), for: .touchUpInside)
         clearAllAnchorsButton.isHidden = true
-        self.clearAllAnchorsButton = clearAllAnchorsButton
-        self.view.addSubview(clearAllAnchorsButton)
+        view.addSubview(clearAllAnchorsButton)
         
         // アンカーの設定
         // scnView
@@ -334,7 +333,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         statusLabel.text = message
         addAnchorButton.isHidden = true
         tapScreenLabel.isHidden = true
-        clearAllAnchorsButton?.isHidden = true
+        clearAllAnchorsButton.isHidden = true
     }
     
     func markerNodeIsTerrainAnchor(_ isTerrainAnchor: Bool) -> SCNNode {
@@ -595,7 +594,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             } else if !islastClickedTerrainAnchorButton {
                 statusLabel.text = "Num anchors: \(garFrame.anchors.count)"
             }
-            clearAllAnchorsButton?.isHidden = garFrame.anchors.count == 0
+            clearAllAnchorsButton.isHidden = garFrame.anchors.count == 0
             addAnchorButton.isHidden = garFrame.anchors.count >= kMaxAnchors
             break
         case .pretracking:
@@ -605,13 +604,13 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
             statusLabel.text = kLocalizationTip
             addAnchorButton.isHidden = true
             tapScreenLabel.isHidden = true
-            clearAllAnchorsButton?.isHidden = true
+            clearAllAnchorsButton.isHidden = true
             break
         case .failed:
             statusLabel.text = kLocalizationFailureMessage
             addAnchorButton.isHidden = true
             tapScreenLabel.isHidden = true
-            clearAllAnchorsButton?.isHidden = true
+            clearAllAnchorsButton.isHidden = true
             break
         case .none:
             print("none")
