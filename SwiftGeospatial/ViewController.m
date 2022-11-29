@@ -380,8 +380,6 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   self.clearAllAnchorsButton.hidden = YES;
 }
 
-/*
-
 - (SCNNode *)markerNodeIsTerrainAnchor:(BOOL)isTerrainAnchor {
   NSURL *objURL = [[NSBundle mainBundle] URLForResource:@"geospatial_marker" withExtension:@"obj"];
   MDLAsset *markerAsset = [[MDLAsset alloc] initWithURL:objURL];
@@ -402,8 +400,6 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   }
   return [SCNNode nodeWithMDLObject:markerObject];
 }
-
-*/
 
 - (void)setUpGARSession {
   if (self.garSession) {
@@ -448,8 +444,6 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
                                     }
                                   }];
 }
-
-/*
 
 - (void)addSavedAnchors {
   NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -879,7 +873,6 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
     self.islastClickedTerrainAnchorButton = self.isTerrainAnchorMode;
   }
 }
- */
 
 #pragma mark - CLLocationManagerDelegate
 
@@ -973,7 +966,7 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
 }
 
 #pragma mark - ARSessionDelegate
-/*
+
 - (void)session:(ARSession *)session didUpdateFrame:(ARFrame *)frame {
   if (self.garSession == nil || self.localizationState == LocalizationStateFailed) {
     return;
@@ -981,7 +974,5 @@ typedef NS_ENUM(NSInteger, LocalizationState) {
   GARFrame *garFrame = [self.garSession update:frame error:nil];
   [self updateWithGARFrame:garFrame];
 }
-
- */
 
 @end
