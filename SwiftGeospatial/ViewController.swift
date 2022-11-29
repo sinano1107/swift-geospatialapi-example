@@ -97,7 +97,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     private var terrainAnchorSwitch: UISwitch!
     
     /** terrainAnchorSwitchのラベルです。 */
-    private var switchLabel: UILabel?
+    private var switchLabel: UILabel!
     
     /** 既存のアンカーをすべてクリアするためのボタンです。 */
     private var clearAllAnchorsButton: UIButton?
@@ -196,14 +196,13 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         view.addSubview(terrainAnchorSwitch)
         
         // switchLabelを初期化
-        let switchLabel = UILabel()
+        switchLabel = UILabel()
         switchLabel.translatesAutoresizingMaskIntoConstraints = false
         switchLabel.font = boldFont
         switchLabel.textColor = UIColor.white
         switchLabel.numberOfLines = 1
-        self.switchLabel = switchLabel
-        self.scnView.addSubview(switchLabel)
-        self.switchLabel!.text = "地形"
+        scnView.addSubview(switchLabel)
+        switchLabel.text = "地形"
         
         // clearAllAnchorsButtonを初期化
         let clearAllAnchorsButton = UIButton(type: .system)
