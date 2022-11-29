@@ -88,7 +88,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     private var statusLabel: UILabel!
     
     /** 画面をタップしてアンカーを作成するヒントを表示するためのラベルです。 */
-    private var tapScreenLabel: UILabel?
+    private var tapScreenLabel: UILabel!
     
     /** 新しい地理空間アンカーを配置するために使用するボタンです。 */
     private var addAnchorButton: UIButton?
@@ -162,7 +162,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         scnView.addSubview(trackingLabel)
         
         // tapScreenLabelを初期化
-        let tapScreenLabel = UILabel()
+        tapScreenLabel = UILabel()
         tapScreenLabel.translatesAutoresizingMaskIntoConstraints = false
         tapScreenLabel.font = boldFont
         tapScreenLabel.textColor = UIColor.white
@@ -170,8 +170,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         tapScreenLabel.textAlignment = NSTextAlignment.center
         tapScreenLabel.text = "画面をタップしてアンカーを作成"
         tapScreenLabel.isHidden = true
-        self.tapScreenLabel = tapScreenLabel
-        self.scnView.addSubview(tapScreenLabel)
+        scnView.addSubview(tapScreenLabel)
         
         // statusLabelを初期化
         statusLabel = UILabel()
@@ -337,7 +336,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     func setErrorStatus(_ message: String) {
         statusLabel.text = message
         addAnchorButton?.isHidden = true
-        tapScreenLabel?.isHidden = true
+        tapScreenLabel.isHidden = true
         clearAllAnchorsButton?.isHidden = true
     }
     
@@ -609,13 +608,13 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         case .localizing:
             statusLabel.text = kLocalizationTip
             addAnchorButton?.isHidden = true
-            tapScreenLabel?.isHidden = true
+            tapScreenLabel.isHidden = true
             clearAllAnchorsButton?.isHidden = true
             break
         case .failed:
             statusLabel.text = kLocalizationFailureMessage
             addAnchorButton?.isHidden = true
-            tapScreenLabel?.isHidden = true
+            tapScreenLabel.isHidden = true
             clearAllAnchorsButton?.isHidden = true
             break
         case .none:
