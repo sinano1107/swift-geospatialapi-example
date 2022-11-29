@@ -91,7 +91,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     private var tapScreenLabel: UILabel!
     
     /** 新しい地理空間アンカーを配置するために使用するボタンです。 */
-    private var addAnchorButton: UIButton?
+    private var addAnchorButton: UIButton!
     
     /** WGS84アンカーまたはTerrainアンカーを作成するためのUISwitch。 */
     private var terrainAnchorSwitch: UISwitch?
@@ -182,14 +182,13 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         scnView.addSubview(statusLabel)
         
         // addAnchorButtonを初期化
-        let addAnchorButton = UIButton(type: .system)
+        addAnchorButton = UIButton(type: .system)
         addAnchorButton.translatesAutoresizingMaskIntoConstraints = false
         addAnchorButton.setTitle("カメラアンカーを追加する", for: .normal)
         addAnchorButton.titleLabel?.font = boldFont
         addAnchorButton.addTarget(self, action: #selector(addAnchorButtonPressed), for: .touchUpInside)
         addAnchorButton.isHidden = true
-        self.addAnchorButton = addAnchorButton
-        self.view.addSubview(addAnchorButton)
+        view.addSubview(addAnchorButton)
         
         // terrainAnchorSwitchを初期化
         let terrainAnchorSwitch = UISwitch()
@@ -335,7 +334,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     
     func setErrorStatus(_ message: String) {
         statusLabel.text = message
-        addAnchorButton?.isHidden = true
+        addAnchorButton.isHidden = true
         tapScreenLabel.isHidden = true
         clearAllAnchorsButton?.isHidden = true
     }
@@ -599,20 +598,20 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
                 statusLabel.text = "Num anchors: \(garFrame.anchors.count)"
             }
             clearAllAnchorsButton?.isHidden = garFrame.anchors.count == 0
-            addAnchorButton?.isHidden = garFrame.anchors.count >= kMaxAnchors
+            addAnchorButton.isHidden = garFrame.anchors.count >= kMaxAnchors
             break
         case .pretracking:
             statusLabel.text = kPretrackingMessage
             break
         case .localizing:
             statusLabel.text = kLocalizationTip
-            addAnchorButton?.isHidden = true
+            addAnchorButton.isHidden = true
             tapScreenLabel.isHidden = true
             clearAllAnchorsButton?.isHidden = true
             break
         case .failed:
             statusLabel.text = kLocalizationFailureMessage
-            addAnchorButton?.isHidden = true
+            addAnchorButton.isHidden = true
             tapScreenLabel.isHidden = true
             clearAllAnchorsButton?.isHidden = true
             break
