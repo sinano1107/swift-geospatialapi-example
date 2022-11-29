@@ -397,6 +397,7 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     func addSavedAnchors() {
         let defaults = UserDefaults.standard
         let savedAnchors: [[String : NSNumber]] = defaults.array(forKey: kSavedAnchorsUserDefaultsKey) as? [[String : NSNumber]] ?? []
+        print("セーブドアンカー: \(savedAnchors.count)")
         for savedAnchor in savedAnchors {
             let latitude = savedAnchor["latitude"]!.doubleValue
             let longitude = savedAnchor["longitude"]!.doubleValue
@@ -797,9 +798,9 @@ class SwiftViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
         if touches.count < 1 {
             return
         }
-        if garFrame.anchors.count >= kMaxAnchors {
-            return
-        }
+        guard touches.count >= 1 else { return }
+        guard let count = garFrame?.anchors.count, count < kMaxAnchors else { return }
+        guard localizationState == .localized else { return }
         
         guard let touch = touches.first else { return }
         let touchLocation = touch.location(in: scnView)
