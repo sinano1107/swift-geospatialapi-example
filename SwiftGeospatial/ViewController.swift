@@ -31,7 +31,12 @@ private let kLocalizationTip = "近な建物やお店、看板などにカメラ
 private let kLocalizationComplete = "ローカライズ完了"
 private let kLocalizationFailureMessage = "ローカライズができない。\n一度アプリを終了し、再度アプリを起動してください。"
 
-private let kGeospatialTransformFormat = "LAT/LONG（緯度/経度）: %.6f°, %.6f°\n    ACCURACY（精度）: %.2fm\nALTITUDE（高度）: %.2fm\n    ACCURACY（精度）: %.2fm\nHEADING（方位）: %.1f°\n    ACCURACY（精度）: %.1f°"
+private let kGeospatialTransformFormat =
+"""
+LAT/LONG（緯度/経度）: %.6f°, %.6f°\nACCURACY（精度）: %.2fm
+ALTITUDE（高度）: %.2fm\n    ACCURACY（精度）: %.2fm
+HEADING（方位）: %.1f°\n    ACCURACY（精度）: %.1f°
+"""
 
 private let kFontSize = CGFloat(14.0)
 
