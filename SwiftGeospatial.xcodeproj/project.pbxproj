@@ -7,19 +7,22 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9F646B092938609200A842B4 /* spatial-marker-baked.png in Resources */ = {isa = PBXBuildFile; fileRef = 9F646B082938609200A842B4 /* spatial-marker-baked.png */; };
+		9F646B0B293860A200A842B4 /* spatial-marker-yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = 9F646B0A293860A200A842B4 /* spatial-marker-yellow.png */; };
+		9F646B0D293860AA00A842B4 /* geospatial_marker.obj in Resources */ = {isa = PBXBuildFile; fileRef = 9F646B0C293860AA00A842B4 /* geospatial_marker.obj */; };
 		9FCB501D29325D3800BE3285 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FCB501C29325D3800BE3285 /* AppDelegate.m */; };
 		9FCB502629325D3800BE3285 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9FCB502429325D3800BE3285 /* Main.storyboard */; };
 		9FCB502829325D3900BE3285 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9FCB502729325D3900BE3285 /* Assets.xcassets */; };
 		9FCB502B29325D3900BE3285 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9FCB502929325D3900BE3285 /* LaunchScreen.storyboard */; };
 		9FCB502E29325D3900BE3285 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FCB502D29325D3900BE3285 /* main.m */; };
-		9FCB503B29326C9700BE3285 /* spatial-marker-yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = 9FCB503A29326C9600BE3285 /* spatial-marker-yellow.png */; };
-		9FCB503D29326CA700BE3285 /* spatial-marker-baked.png in Resources */ = {isa = PBXBuildFile; fileRef = 9FCB503C29326CA700BE3285 /* spatial-marker-baked.png */; };
-		9FCB503F29326CB300BE3285 /* geospatial_marker.obj in Resources */ = {isa = PBXBuildFile; fileRef = 9FCB503E29326CB300BE3285 /* geospatial_marker.obj */; };
 		9FCB50452933307000BE3285 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FCB50442933307000BE3285 /* ViewController.swift */; };
 		9FFE07B429367B9700B401DD /* APIKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFE07B329367B9700B401DD /* APIKey.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		9F646B082938609200A842B4 /* spatial-marker-baked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "spatial-marker-baked.png"; sourceTree = "<group>"; };
+		9F646B0A293860A200A842B4 /* spatial-marker-yellow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "spatial-marker-yellow.png"; sourceTree = "<group>"; };
+		9F646B0C293860AA00A842B4 /* geospatial_marker.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = geospatial_marker.obj; sourceTree = "<group>"; };
 		9FCB501829325D3800BE3285 /* SwiftGeospatial.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftGeospatial.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9FCB501B29325D3800BE3285 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		9FCB501C29325D3800BE3285 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -28,9 +31,6 @@
 		9FCB502A29325D3900BE3285 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		9FCB502C29325D3900BE3285 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9FCB502D29325D3900BE3285 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		9FCB503A29326C9600BE3285 /* spatial-marker-yellow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "spatial-marker-yellow.png"; path = "../../GeospatialExample/GeospatialExample/spatial-marker-yellow.png"; sourceTree = "<group>"; };
-		9FCB503C29326CA700BE3285 /* spatial-marker-baked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "spatial-marker-baked.png"; path = "../../GeospatialExample/GeospatialExample/spatial-marker-baked.png"; sourceTree = "<group>"; };
-		9FCB503E29326CB300BE3285 /* geospatial_marker.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = geospatial_marker.obj; path = ../../GeospatialExample/GeospatialExample/geospatial_marker.obj; sourceTree = "<group>"; };
 		9FCB50432933307000BE3285 /* SwiftGeospatial-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SwiftGeospatial-Bridging-Header.h"; sourceTree = "<group>"; };
 		9FCB50442933307000BE3285 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		9FFE07B329367B9700B401DD /* APIKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKey.swift; sourceTree = "<group>"; };
@@ -66,9 +66,9 @@
 		9FCB501A29325D3800BE3285 /* SwiftGeospatial */ = {
 			isa = PBXGroup;
 			children = (
-				9FCB503A29326C9600BE3285 /* spatial-marker-yellow.png */,
-				9FCB503C29326CA700BE3285 /* spatial-marker-baked.png */,
-				9FCB503E29326CB300BE3285 /* geospatial_marker.obj */,
+				9F646B082938609200A842B4 /* spatial-marker-baked.png */,
+				9F646B0A293860A200A842B4 /* spatial-marker-yellow.png */,
+				9F646B0C293860AA00A842B4 /* geospatial_marker.obj */,
 				9FCB501B29325D3800BE3285 /* AppDelegate.h */,
 				9FCB501C29325D3800BE3285 /* AppDelegate.m */,
 				9FCB50442933307000BE3285 /* ViewController.swift */,
@@ -144,11 +144,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9FCB503D29326CA700BE3285 /* spatial-marker-baked.png in Resources */,
+				9F646B0B293860A200A842B4 /* spatial-marker-yellow.png in Resources */,
+				9F646B092938609200A842B4 /* spatial-marker-baked.png in Resources */,
+				9F646B0D293860AA00A842B4 /* geospatial_marker.obj in Resources */,
 				9FCB502B29325D3900BE3285 /* LaunchScreen.storyboard in Resources */,
-				9FCB503F29326CB300BE3285 /* geospatial_marker.obj in Resources */,
 				9FCB502829325D3900BE3285 /* Assets.xcassets in Resources */,
-				9FCB503B29326C9700BE3285 /* spatial-marker-yellow.png in Resources */,
 				9FCB502629325D3800BE3285 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
